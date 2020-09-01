@@ -1,0 +1,23 @@
+{
+  "name": "bowel",
+  "version": "1.0.0",
+  "description": "Small build system for Bootstrap components.",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/catpea/bowel.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/catpea/bowel/issues"
+  },
+  "homepage": "https://github.com/catpea/bowel#readme",
+  "dependencies": {
+    "lodash": "^4.17.20"
+  }
+}
