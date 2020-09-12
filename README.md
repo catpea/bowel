@@ -1,5 +1,5 @@
 # bowel
-Bowel is a small and lightweight scaffolding and build system for rapid assembly of HTML components.
+Bowel is a small and lightweight scaffolding and build system for rapid assembly of HTML components, templates, and themes.
 
 Scaffolding and HTML component/snippet management is a huge problem that requires a very simple and lightweight solution.
 
