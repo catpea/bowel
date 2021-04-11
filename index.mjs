@@ -1,5 +1,10 @@
 #!/usr/bin/env -S node --experimental-modules
 
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+  // application specific logging, throwing an error, or other logic here
+});
+
 import { Command } from 'commander/esm.mjs';
 import api from './api.mjs';
 
@@ -26,16 +31,17 @@ async function main(){
 main();
 
 async function info({target}){
-  const data = await api.jsonParse(target);
-  console.log(data);
+  const so = await api.jsonParse(target);
+  const schema = await api.getSchema(so);
+  console.clear();
+  console.log(schema);
 }
 
 async function decompiler({target}){
-  // OBJECT DECOMPILER
-  const data = await api.jsonParse(target);
-  
+  const so = await api.jsonParse(target);
+  await api.toDirs(so);
 }
 
 async function compiler({target}){
-  const data = await api.dirParse(target);
+  //const so = await api.dirParse(target);
 }
