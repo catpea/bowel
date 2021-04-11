@@ -1,8 +1,11 @@
 {
   "name": "bowel",
-  "version": "1.0.2",
-  "description": "Small build system for Bootstrap components.",
+  "version": "2.0.0",
+  "description": "Small build system for server objects.",
   "main": "index.mjs",
+  "bin": {
+    "bowel": "./index.mjs"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -19,6 +22,7 @@
   "homepage": "https://github.com/catpea/bowel#readme",
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
+    "commander": "^7.2.0",
     "lodash": "^4.17.20"
   }
 }
