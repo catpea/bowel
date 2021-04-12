@@ -40,3 +40,11 @@ bowel --decompile /home/user/Universe/Development/poetry/dist/server-object/furk
 
 
 ```
+
+# TODO
+
+Support for multiple input formats is required, the system will search for content.* and use the extension to determine which parser to use.
+
+Supported extensions should be html for complex html applications, markdown for poems and things with links, and jade for shorthand html.
+
+This will part with strict formatting rules, unfortunately. I wanted to use HTML for everything but it became to cumbersome for simple text with links, the solution is to use markdown with shorthand links (wiki like links). The price to pay for this convenience is that I will no longer aim for two paragraph separators in a stanza. Perhaps I shall employ a semicolon from now on.
