@@ -2,7 +2,6 @@
 
 process.on('unhandledRejection', (reason, p) => {
   console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-  // application specific logging, throwing an error, or other logic here
 });
 
 import { Command } from 'commander/esm.mjs';
@@ -20,25 +19,16 @@ program
   .option('-s, --status <file>', 'print statistics and other useful information.')
   .option('-c, --compile <directory>', 'Compile directory tree into a JSON server-object file.')
 
+main();
+
 async function main(){
-
   program.parse(process.argv);
-
   const options = program.opts();
-
   if (options.info) info({target:options.info});
-  if (options.decompile) decompiler({
-
-    webDir: options.webDir,
-    audioDir: options.audioDir,
-    imageDir: options.imageDir,
-
-    target:options.decompile});
+  if (options.decompile) decompiler({ webDir: options.webDir, audioDir: options.audioDir, imageDir: options.imageDir, target:options.decompile});
   if (options.compile) compiler({target:options.compile});
-
 }
 
-main();
 
 async function info({target}){
   const so = await api.jsonParse(target);
@@ -56,7 +46,6 @@ async function decompiler({target, webDir, audioDir, imageDir}){
   await api.createIndex(so); // now we know order, and book metadata
   await api.createDirectories(so); // now poems and their configuration has been stored
   await api.importFiles(so, webDir, audioDir, imageDir); // now assets have been imported.
-  //TODO: consider adding a long-running link checker here
 
 }
 
