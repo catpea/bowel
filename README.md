@@ -13,3 +13,30 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 
 2.0.0 represents breaking changes.
 1.x (the reference implementation) was never published publicly (as a stand-alone program).
+
+# Strategy
+
+The content repository is created ONCE, with the -d flag,
+in that moment what you have is the new content leader.
+
+Only when the content.html changes, will there be a re-calculation,
+if you never touch(1) the content.html, then it will never be re-compiled.
+
+# Usage
+
+## Importing a non-narrated resource
+
+```shell
+
+bowel --decompile /home/user/Universe/Development/warrior/dist/server-object/westland-warrior.json --image-dir /home/user/Universe/Development/warrior/docs/images/
+
+```
+
+## Importing a narrated resource featuring local web assets
+
+```shell
+
+bowel --decompile /home/user/Universe/Development/poetry/dist/server-object/furkies-purrkies.json --image-dir /home/user/Universe/Development/poetry/src/image/ --audio-dir /home/user/Universe/Development/poetry/src/audio/ --web-dir /home/user/Universe/Development/poetry/docs/
+
+
+```
