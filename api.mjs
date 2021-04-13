@@ -219,7 +219,6 @@ async function createRecord(recordFile, directory){
   const configuration = Object.fromEntries(Object.keys(item).filter(i=>requiredFields.includes(i)).map(i=>[i, item[i]]));
 
   // content that cache is created from
-  await writeFile(path.join(dataDirectory, 'content.html'), item.html);
   await writeFile(path.join(dataDirectory, 'configuration.json'), JSON.stringify(configuration, null, '  '))
 
   // cache of processed content and options
