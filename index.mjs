@@ -50,13 +50,13 @@ async function decompiler({target, webDir, audioDir, imageDir}){
 }
 
 async function compiler({target}){
-  //const so = await api.dirParse(target);
-  // TODO:  create dist directory, image, audio, server-object.
-  // TODO:  Compiler re-creates the server-object/server-object.json file
+  const ix = await api.indexParse(target);
+  await api.createDistribution(ix);
+
   // TODO:  Images, and audio need to be copied into /dist
 
   // NOTE: video compiler, ausiobook compiler, mirror compiler, and all the extras are outide of this projects scope,
   // NOTE: the repository where server-object was decompiled into, needs a bin directory with some utilities, possibly a menu for ease of use.
 
-  // NOTE: all you do here is dump audio image and server-object.json into dist
+
 }
