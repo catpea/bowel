@@ -9,6 +9,30 @@ it is difficult to justify using a full laptop or desktop just to publish a webs
 The old is new again, some parts of the world are still waiting for computers to get fast enough to run massive Java codebases, but that was always a pipe dream.
 If a $50 computer can do the job, you write faster software to eliminate the code bloat, you do not wait for faster computers to run your code faster, that will always hold you back.
 
+# TODO
+
+
+- [ ] Standardize html from md and yaml, but create a bootstrap variant here, just well written html.
+- [ ] Convert standard HTML to bootstrap formatting using cheerio
+- [ ] Create an Apache like "Index Of" for poems that will double as a website mirror.
+- [ ] Add the Audiobook compiler, and remember that it just concatetantes files so it is very fast.
+- [ ] Templating system, that us used for a "Add New Post", this may need to be a commander based CLI rather than a menu.
+
+## Urgent!
+
+- [ ] Copy audio extras, a merge system/forlder may need to be required for this, otherwise wget will not mirror files
+- [ ] Adapt server to import the extended v2 dist folder, server uses a shell script to copy those files, easy fix.
+
+## Refactoring
+
+- [ ] There need to be two decompilers one for v1 format and the second for v2.
+- [x] Tag server objects with a format: 'v1'/'v2' markers to automaticaly tell them apart.
+- [ ] Divide code for compiler and recompiler, they should live in separate files.
+
+## Nice To have
+
+- [ ] Health monitoring system, review each record with a unit test
+
 # Notes
 
 2.0.0 represents breaking changes.
@@ -40,11 +64,3 @@ bowel --decompile ~/Universe/Development/poetry/dist/server-object/furkies-purrk
 
 
 ```
-
-# TODO
-
-Support for multiple input formats is required, the system will search for content.* and use the extension to determine which parser to use.
-
-Supported extensions should be html for complex html applications, markdown for poems and things with links, and jade for shorthand html.
-
-This will part with strict formatting rules, unfortunately. I wanted to use HTML for everything but it became to cumbersome for simple text with links, the solution is to use markdown with shorthand links (wiki like links). The price to pay for this convenience is that I will no longer aim for two paragraph separators in a stanza. Perhaps I shall employ a semicolon from now on.

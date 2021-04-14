@@ -321,7 +321,7 @@ async function createDistribution(ix) {
     const directory = path.join(baseDirectory, entry);
     const record = await buildRecord(directory);
     data.push(record);
-  
+
 
     // Create Into Cache based on stuff in files
     if (ix.coverImages) await resizeCoverImage(directory, record);
@@ -336,6 +336,7 @@ async function createDistribution(ix) {
   }
 
   const recompiled = Object.assign({}, ix, { data });
+  recompiled.format = 'v2';
   const outputFile = path.join(projectDirectory, ix.name + ".json");
   await writeFile(outputFile, JSON.stringify(recompiled, null, "  "));
   console.log(`Created: ${outputFile}`);
