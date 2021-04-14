@@ -28,7 +28,7 @@ if you never touch(1) the content.html, then it will never be re-compiled.
 
 ```shell
 
-bowel --decompile /home/user/Universe/Development/warrior/dist/server-object/westland-warrior.json --image-dir /home/user/Universe/Development/warrior/docs/images/
+bowel --decompile ~/Universe/Development/warrior/dist/server-object/westland-warrior.json --image-dir ~/Universe/Development/warrior/docs/images/
 
 ```
 
@@ -36,7 +36,7 @@ bowel --decompile /home/user/Universe/Development/warrior/dist/server-object/wes
 
 ```shell
 
-bowel --decompile /home/user/Universe/Development/poetry/dist/server-object/furkies-purrkies.json --image-dir /home/user/Universe/Development/poetry/src/image/ --audio-dir /home/user/Universe/Development/poetry/src/audio/ --web-dir /home/user/Universe/Development/poetry/docs/
+bowel --decompile ~/Universe/Development/poetry/dist/server-object/furkies-purrkies.json --image-dir ~/Universe/Development/poetry/src/image/ --audio-dir ~/Universe/Development/poetry/src/audio/ --web-dir ~/Universe/Development/poetry/docs/ --release-dir ~/Universe/Development/poetry/dist/
 
 
 ```
