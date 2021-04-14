@@ -19,7 +19,7 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 - [ ] Templating system, that us used for a "Add New Post", this may need to be a commander based CLI rather than a menu.
 
 ## Urgent!
-
+- [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos
 - [ ] Copy audio extras, a merge system/forlder may need to be required for this, otherwise wget will not mirror files
 - [ ] Adapt server to import the extended v2 dist folder, server uses a shell script to copy those files, easy fix.
 

@@ -32,8 +32,23 @@ async function createIndex(so) {
   debug(`created index: ${indexFileLocation}`);
 }
 
-async function createData(so) {
+async function createData(so, yamlDb) {
   const baseDirectory = path.resolve(path.join(".", so.name));
+
+  const fused = {}
+  if(so.yamlDatabase){
+    debug(`Importing yaml database and creating a local abstraction...`);
+    const index = yaml.load(await readFile(path.join(yamlDb,'index.yaml')));
+    for(const item of index){
+      item.data = yaml.load(await readFile(path.join(yamlDb,`${item.name}/index.yaml`)));
+      for (let section of item.data) {
+        if (section.text) {
+          section.text = (await readFile(path.join(yamlDb,`${item.name}/${section.text}`))).toString();
+        }
+      }
+      fused[item.name] = item.data;
+    }
+  }
 
   const progressBar = new cliProgress.SingleBar({ format: 'Processing Data: |' + colors.yellow('{bar}') + '| {percentage}% || {value}/{total} Entries', barCompleteChar: '\u2588', barIncompleteChar: '\u2591', hideCursor: true }, cliProgress.Presets.shades_classic);
   if (!process.env.DEBUG) progressBar.start(so.data.length-1, 0); debug('create directories progress bar has been disabled for DEBUG mode');
@@ -50,6 +65,13 @@ async function createData(so) {
     await mkdir(dataDirectory, { recursive: true });
     await mkdir(filesDirectory, { recursive: true });
     await mkdir(cacheDirectory, { recursive: true });
+
+    if(so.yamlDatabase){
+      debug(`Creating content.yaml for ${item.id}`);
+      const id = item.id.split(so.name + '-').pop();
+      const contentFile = path.join(dataDirectory, 'content.yaml');
+      await writeFile(contentFile, yaml.dump(fused[id], {lineWidth: 32_000}))
+    }
 
     // content that cache is created from
     if(!so.yamlDatabase){
@@ -82,46 +104,31 @@ async function createData(so) {
   progressBar.stop();
 }
 
-async function importFiles(so, distDir, webDir, audioDir, imageDir, yamlDb) {
+async function importFiles(so, distDir, webDir, audioDir, imageDir) {
   const baseDirectory = path.resolve(path.join(".", so.name));
 
   const progressBar = new cliProgress.SingleBar({ format: 'Importing Files: |' + colors.yellow('{bar}') + '| {percentage}% || {value}/{total} Entries', barCompleteChar: '\u2588', barIncompleteChar: '\u2591', hideCursor: true }, cliProgress.Presets.shades_classic);
   if (!process.env.DEBUG) progressBar.start(so.data.length-1, 0); debug('import files progress bar has been disabled for DEBUG mode')
   let progressCounter = 0;
 
-  const fused = {}
-  if(so.yamlDatabase){
-    debug(`Importing yaml database and creating a local abstraction...`);
-    const index = yaml.load(await readFile(path.join(yamlDb,'index.yaml')));
-    for(const item of index){
-      item.data = yaml.load(await readFile(path.join(yamlDb,`${item.name}/index.yaml`)));
-      for (let section of item.data) {
-        if (section.text) {
-          section.text = (await readFile(path.join(yamlDb,`${item.name}/${section.text}`))).toString();
-        }
-      }
-      fused[item.name] = item.data;
-    }
-  }
+
 
   for (const item of so.data) {
     progressBar.update(progressCounter++);
 
     debug(`Importing data for ${item.id}, ${so.data.indexOf(item)+1}/${so.data.length}`);
 
-    const mainDirectory = path.join(baseDirectory, item.id);
+    //const mainDirectory = path.join(baseDirectory, item.id);
+    const dataDirectory = path.join(baseDirectory, item.id);
     const filesDirectory = path.join(baseDirectory, item.id, "files");
     const cacheDirectory = path.join(baseDirectory, item.id, "cache");
     await mkdir(filesDirectory, { recursive: true });
 
     if(so.yamlDatabase){
 
-      debug(`Creating content.yaml for ${item.id}`);
-      const id = item.id.split(so.name + '-').pop();
-      const contentFile = path.join(mainDirectory, 'content.yaml');
-      await writeFile(contentFile, yaml.dump(fused[id], {lineWidth: 32_000}))
-
-      const imageDependencies = (await gatherImages(fused[id]));
+      const contentFile = path.join(dataDirectory, 'content.yaml');
+      const database = yaml.load((await readFile(contentFile)).toString())
+      const imageDependencies = (await gatherImages(database));
       for(const image of imageDependencies){
         const sourceFile = path.join(webDir, 'images', image);
         const destinationFile = path.join(filesDirectory, image);
@@ -130,6 +137,7 @@ async function importFiles(so, distDir, webDir, audioDir, imageDir, yamlDb) {
           await copyFile(sourceFile, destinationFile);
         }
       }
+
       if (item.image) {
         const sourceFile = path.join(webDir, 'images', item.image);
         const destinationFile = path.join(cacheDirectory, item.image);

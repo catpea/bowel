@@ -76,12 +76,12 @@ async function decompile({target, distDir, webDir, audioDir, imageDir, yamlDb}){
   }
 
   await decompiler[so.format||'v1'].createIndex(so); // now we know order, and book metadata
-  await decompiler[so.format||'v1'].createData(so); // now poems and their configuration has been stored
-  await decompiler[so.format||'v1'].importFiles(so, distDir, webDir, audioDir, imageDir, yamlDb); // now assets have been imported.
+  await decompiler[so.format||'v1'].createData(so, yamlDb); // now poems and their configuration has been stored
+  await decompiler[so.format||'v1'].importFiles(so, distDir, webDir, audioDir, imageDir); // now assets have been imported.
 
 }
 
 async function compile({target}){
   const ix = await compiler.indexParse(target);
-  //await compiler.createDistribution(ix);
+  await compiler.createDistribution(ix);
 }
