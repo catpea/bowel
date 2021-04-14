@@ -11,7 +11,7 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 
 # TODO
 
-
+- [ ] Add YouTube video thumbnail downloader to the compiler.
 - [ ] Standardize html from md and yaml, but create a bootstrap variant here, just well written html.
 - [ ] Convert standard HTML to bootstrap formatting using cheerio
 - [ ] Create an Apache like "Index Of" for poems that will double as a website mirror.
@@ -27,7 +27,7 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 
 - [ ] There need to be two decompilers one for v1 format and the second for v2.
 - [x] Tag server objects with a format: 'v1'/'v2' markers to automaticaly tell them apart.
-- [ ] Divide code for compiler and recompiler, they should live in separate files.
+- [x] Divide code for compiler and recompiler, they should live in separate files.
 
 ## Nice To have
 
