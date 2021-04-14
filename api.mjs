@@ -21,6 +21,7 @@ import {
   copyAudio,
   copyCoverImages,
   copyLocalAssets,
+  gatherImages,
 } from "./helpers.mjs";
 
 export default {
@@ -50,7 +51,7 @@ async function importFiles(so, releaseDir, webDir, audioDir, imageDir) {
   const baseDirectory = path.resolve(path.join(".", so.name));
 
   const progressBar = new cliProgress.SingleBar({ format: 'Importing Files: |' + colors.yellow('{bar}') + '| {percentage}% || {value}/{total} Entries', barCompleteChar: '\u2588', barIncompleteChar: '\u2591', hideCursor: true }, cliProgress.Presets.shades_classic);
-  //progressBar.start(so.data.length-1, 0);
+  progressBar.start(so.data.length-1, 0);
   let progressCounter = 0;
 
   const fused = {}
@@ -82,13 +83,23 @@ async function importFiles(so, releaseDir, webDir, audioDir, imageDir) {
     //contactSheet
 
     if(so.yamlDatabase){
-      //console.log(so.name, item.id);
       const id = item.id.split(so.name + '-').pop();
-      //console.log(id);
-      // /home/meow/Universe/Development/warrior/db/the-adventurer/index.yaml
       const contentFile = path.join(mainDirectory, 'content.yaml');
-
       await writeFile(contentFile, yaml.dump(fused[id], {lineWidth: 32_000}))
+      const imageDependencies = (await gatherImages(fused[id]));
+
+      for(const image of imageDependencies){
+        const sourceFile = path.join('/home/meow/Universe/Development/warrior/docs/images', image);
+        const destinationFile = path.join(filesDirectory, image);
+        if (!fs.existsSync(destinationFile)) {
+          copyFile(sourceFile, destinationFile);
+        }
+      }
+
+
+
+
+
     }
 
 
@@ -310,11 +321,12 @@ async function createDistribution(ix) {
     const directory = path.join(baseDirectory, entry);
     const record = await buildRecord(directory);
     data.push(record);
+  
 
     // Create Into Cache based on stuff in files
     if (ix.coverImages) await resizeCoverImage(directory, record);
 
-    //////////////////////////////////////////////////////////////////////////// if (ix.contactSheet) await createContactSheetImage(directory, record);
+    if (ix.contactSheet) await createContactSheetImage(directory, record);
     if (ix.audioVersion) await convertAudioToVideo(directory, record);
 
     // Copy To Dist from Cache

@@ -55,13 +55,10 @@ async function compiler({target}){
   const ix = await api.indexParse(target);
   await api.createDistribution(ix);
 
-  // TODO: Import yaml stuff as content.yaml
-  
-  // TODO: Fix Contact Sheet Cover Image!!!!
 
-  // TODO: Convert Markdown output to p.section/stanza thing
-  // TODO: Create the Bootstrap Variant
+  // TODO: Convert Markdown output to p.section/stanza thing AND >>>>>>> Create the Bootstrap Variant
   // TODO: Create A Simple HTML Mittor (Use "Index Of" like design from apache.)
+
   // TODO: Audiobook Compiler, split things up by time, 8 hours serments perhaps.
 
 }

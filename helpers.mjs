@@ -12,7 +12,7 @@ import pretty from 'pretty';
 
 import fs from "fs";
 import path from "path";
-import { mkdir, writeFile, copyFile, readdir } from "fs/promises";
+import { mkdir, readFile, writeFile, copyFile, readdir } from "fs/promises";
 
 import util from 'util';
 import child_process from 'child_process';
@@ -38,6 +38,7 @@ export {
   copyAudio,
   copyCoverImages,
   copyLocalAssets,
+  gatherImages,
 };
 
 const coverImages = [
@@ -67,17 +68,37 @@ async function resizeCoverImage(dataDirectory, entry) {
   return true;
 }
 
+async function gatherImages(database) {
+  const images = [];
+  for (let section of database) {
+    if(section.type == 'youtube'){
+      images.push(`yid-${section.id}.jpg`);
+    } else if(section.type == 'image'){
+      images.push(`${section.url}`);
+    } else if(section.type == 'business'){
+      images.push(`${section.url}`);
+    }
+  } // for each section
+  return images;
+}
+
 async function createContactSheetImage(dataDirectory, entry) {
   if(!entry.image) return; // sometimes things don't have an audio version
-  //if(!so.contactSheet) return; // be strict
 
   const filesDirectory = path.join(dataDirectory, "files");
   const cacheDirectory = path.join(dataDirectory, "cache");
 
-  const sourceFiles = [];
-  const destinationFile = path.join(cacheDirectory, entry.image);
+  const yamlContentFile = path.join(dataDirectory, "content.yaml");
+  const database = yaml.load(await readFile(yamlContentFile));
 
-  // if(await shouldRecompile(destinationFile, sourceFile)){
+  const destinationFile = path.join(filesDirectory, entry.image);
+  const sourceFiles = (await gatherImages(database)).map(i=>path.join(filesDirectory,i));
+
+  if(sourceFiles.length === 0) return;
+
+  const latestFile = sourceFiles.map(file=>({file, date: new Date(fs.statSync(file).mtime)})).sort((a, b) => b.date - a.date).shift().file;
+  if(await shouldRecompile(destinationFile, latestFile)){
+    console.log(`rebuilding cover image for: ${entry.id}`);
 
     let tile = 3;
     if(sourceFiles > 17) tile = 3;
@@ -99,61 +120,16 @@ async function createContactSheetImage(dataDirectory, entry) {
       'DESTINATION'
      ]
     .map(i=>i==='TILE'?`${tile}x`:i)
-    .map(i=>i==='SOURCES'?sourceFiles:i)
+    //.map(i=>i==='SOURCES'?sourceFiles.join(" "):i)
     .map(i=>i==='DESTINATION'?destinationFile:i);
 
-    // const { stdout } = await execFile(command, commandArguments);
-    // console.log(stdout);
+    commandArguments.splice(commandArguments.indexOf('SOURCES'), 1, ...sourceFiles);
+    const { stdout } = await execFile(command, commandArguments);
+    //console.log(stdout);
     // fs.utimesSync(destinationFile, new Date(), new Date());
 
-    console.log(command, commandArguments);
-  // }
-
+   }
   return true;
-
-  // so.contactSheet
-
-  // const toc = yaml.safeLoad(fs.readFileSync(path.resolve(path.join(options.directory, options.index))));
-  // for (let {name, date} of toc) {
-  //   const sections = yaml.safeLoad(fs.readFileSync(path.resolve(path.join(options.directory, name, options.index))));
-  //
-  //   let images = [];
-  //   for (let section of sections) {
-  //     if(section.type == 'youtube'){
-  //       images.push(`docs/images/yid-${section.id}.jpg`);
-  //     } else if(section.type == 'image'){
-  //       images.push(`docs/images/${section.url}`);
-  //     } else if(section.type == 'business'){
-  //       images.push(`docs/images/${section.url}`);
-  //     }
-  //   } // for each section
-  //
-  //   // console.log(images.length, images);
-  //   if(images.length){
-  //
-  //     let filePath = path.join('docs/images', 'warrior-' + kebabCase(name) + '-cover.jpg')
-  //     let coverPath = path.join('docs/images', kebabCase(name) + '-illustration.jpg')
-  //
-  //     const files = images.filter(i=>'.gif'!==path.extname(i)).map(i=>`"${i}"`).join(" ")
-  //
-  //     if(!fs.pathExistsSync(filePath)){
-  //       console.log(`Creating Cover Image for ${name}`);
-  //       // console.log(`montage ${files} ${filePath}`);
-  //       let tile = 3;
-  //       if(images.length > 17) tile = 3;
-  //       if(images.length > 25) tile = 4;
-  //       if(images.length > 35) tile = 5;
-  //       if(images.length > 45) tile = 7;
-  //       if(images.length < 9) tile = 2;
-  //       if(images.length < 4) tile = 1;
-  //
-  //       await execShellCommand(`montage -background '#212529' ${files} -geometry 320x230 -tile ${tile}x ${filePath}`);
-  //       //await execShellCommand(`convert -define jpeg:size=1000x1000 ${filePath}  -thumbnail 500x500^ -gravity center -extent 1000x1000 -quality 80 ${coverPath};`);
-  //       //break;
-  //     }
-  //   }
-  //
-  // } // for each chapter
 }
 
 async function convertAudioToVideo(dataDirectory, entry) {
@@ -244,7 +220,10 @@ async function shouldCopyFile(sourceFile, destinationFile) {
 }
 
 async function shouldRecompile(destinationFile, sourceFile) {
-  if (!fs.existsSync(destinationFile)) return true; // yes it is outdated, it does not even exit
+  if (!fs.existsSync(destinationFile)){
+    console.log(`Outdated file, file does not exist ${destinationFile}`);
+    return true; // yes it is outdated, it does not even exit
+  }
   const destinationStats = fs.statSync(destinationFile);
   const sourceStats = fs.statSync(sourceFile);
   const destinationDate = new Date(destinationStats.mtime);
@@ -312,10 +291,7 @@ async function createRecord(recordFile, directory) {
   );
 
   // content that cache is created from
-  await writeFile(
-    path.join(dataDirectory, "configuration.json"),
-    JSON.stringify(configuration, null, "  ")
-  );
+  await writeFile( path.join(dataDirectory, "configuration.json"), JSON.stringify(configuration, null, "  ") );
 
   // cache of processed content and options
   await writeFile(
@@ -338,6 +314,8 @@ async function createRecord(recordFile, directory) {
     path.join(cacheDirectory, "record.json"),
     JSON.stringify(item, null, "  ")
   );
+
+  return item;
 }
 
 async function contentFile(directory) {
@@ -363,6 +341,9 @@ async function buildRecord(directory) {
     console.log(`Invalid cache for ${recordFile}`);
     Object.assign(record, await createRecord(recordFile, directory));
   }
+
+  if(Object.keys(record).length === 0) throw new Error('Returned empty record')
+
   return record;
 }
 
@@ -573,7 +554,12 @@ function yamlDatabaseToHtml(content){
   `;
   let html = "";
   const template = handlebars.compile(htmlTemplate);
-  for( let element of content ) html += template(element);
+
+  for( let element of content ){
+    if(element.text) element.text = marked(element.text);
+    html += template(element);
+  }
+
   html = pretty(html, {ocd: true});
   return html;
 }
