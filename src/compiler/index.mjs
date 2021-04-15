@@ -5,19 +5,21 @@ import path from "path";
 import { existsSync, statSync } from "fs";
 import { readFile, mkdir, writeFile, copyFile} from "fs/promises";
 
+import yaml from "js-yaml";
+
 import cliProgress from 'cli-progress';
 import colors from 'colors';
 
 import { buildRecord } from "./build-record/index.mjs";
 
+
 import { resizeCoverImage } from "./resize-cover-image/index.mjs";
-import { downloadVideoThumbnails } from "./download-video-thumbnails/index.mjs"; 
+import { downloadVideoThumbnails } from "./download-video-thumbnails/index.mjs";
 import { createContactSheetImage } from "./create-contact-sheet-image/index.mjs";
 import { convertAudioToVideo } from "./convert-audio-to-video/index.mjs";
+import { createMirror } from "./create-mirror/index.mjs";
 
-import { coverImages } from "../helpers.mjs";
-
-
+import { coverImages, gatherImages } from "../helpers.mjs";
 
 export default {
   indexParse,
@@ -34,12 +36,16 @@ async function indexParse(target) {
 async function createDistribution(ix) {
 
   const baseDirectory = path.resolve(path.resolve(ix.name));
+
   const projectDirectory = path.join(path.resolve("dist"), ix.name);
   await mkdir(projectDirectory, { recursive: true });
+
   const projectImageDirectory = path.join(projectDirectory, 'image');
   await mkdir(projectImageDirectory, { recursive: true });
+
   const projectAudioDirectory = path.join(projectDirectory, 'audio');
   await mkdir(projectAudioDirectory, { recursive: true });
+
   debug(`Created distribution directory: ${projectDirectory}`)
 
   const data = [];
@@ -51,11 +57,11 @@ async function createDistribution(ix) {
   for (const entry of ix.data) {
 
     progressBar.update(progressCounter++);
-    debug(`Processing ${entry.id}, ${ix.data.indexOf(entry)+1}/${ix.data.length}`);
+    debug(`Processing ${entry}, ${ix.data.indexOf(entry)+1}/${ix.data.length}`);
 
-    const directory = path.join(baseDirectory, entry);
     debug('Building the record...')
-    const record = await buildRecord(directory);
+    const directory = path.join(baseDirectory, entry);
+    const record = await buildRecord(directory); // NOTE: data becomes available here, previously it was just an array of indexes.
     data.push(record);
 
     debug('Generating media...')
@@ -71,16 +77,23 @@ async function createDistribution(ix) {
     debug('Copying files into the distribution directory...')
     // Copy To Dist from Cache
     if (ix.audioVersion) await copyAudio(directory, projectDirectory, record);
-    if (ix.coverImages) await copyCoverImages(directory, projectDirectory, record);
     if (ix.localAssets) await copyLocalAssets(directory, projectDirectory, record);
+    if (ix.coverImages||ix.contactSheet) await copyCoverImages(directory, projectDirectory, record);
+    if (ix.contactSheet) await copyVideoThumbnails(directory, projectDirectory, record);
+
+
   }
 
+  debug('Creating the new server object file...')
   const recompiled = Object.assign({}, ix, { data });
   recompiled.format = 'v2';
   const outputFile = path.join(projectDirectory, ix.name + ".json");
   await writeFile(outputFile, JSON.stringify(recompiled, null, "  "));
-  progressBar.stop();
 
+  debug('Creating a mirror...')
+  await createMirror(projectDirectory, recompiled);
+
+  progressBar.stop();
   debug(`Created: ${outputFile}`);
 
 }
@@ -115,9 +128,32 @@ async function copyCoverImages(dataDirectory, distDirectory, entry) {
     if(await shouldCopyFile(sourceFile, destinationFile)) await copyFile(sourceFile, destinationFile);
   }
 }
+async function copyVideoThumbnails(dataDirectory, distDirectory, entry) {
+  const yamlContentFile = path.join(dataDirectory, "content.yaml");
+  const database = yaml.load(await readFile(yamlContentFile));
+  const sourceFiles = (await gatherImages(database));
+  for(const image of sourceFiles){
+    const filesDirectory = path.join(dataDirectory, "files");
+    const cacheDirectory = path.join(dataDirectory, "cache");
+    const sourceFile = path.join(filesDirectory, image);
+    const destinationFile = path.join(distDirectory, 'image', image);
+    if(await shouldCopyFile(sourceFile, destinationFile)) await copyFile(sourceFile, destinationFile);
+  }
+}
 
 async function copyLocalAssets(dataDirectory, distDirectory, entry) {
   //NOTE: assets are found in .links
+  for (const image of entry.images) {
+      const filesDirectory = path.join(dataDirectory, "files");
+      const cacheDirectory = path.join(dataDirectory, "cache");
+      const destinationDirectory = path.join( distDirectory );
+
+      for(const coverImage of coverImages){
+        const sourceFile = path.join(cacheDirectory, `${coverImage.id}-${image.url}`);
+        const destinationFile = path.join( destinationDirectory, 'image', `${coverImage.id}-${image.url}` );
+        if(await shouldCopyFile(sourceFile, destinationFile)) await copyFile(sourceFile, destinationFile);
+      }
+  }
   for (const link of entry.links) {
     if (!link.url.startsWith("http")) {
       const filesDirectory = path.join(dataDirectory, "files");

@@ -11,30 +11,30 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 
 # TODO
 
+## Primary
 - [ ] Templating system, that us used for a "Add New Post", this may need to be a commander based CLI rather than a menu.
-- [x] Add YouTube video thumbnail downloader to the compiler.
 - [ ] Standardize html from md and yaml, but do not create a bootstrap variant here, just well written html.
 - [ ] Convert standard HTML to bootstrap formatting using cheerio
-- [ ] Create an Apache like "Index Of" for poems that will double as a website mirror.
-- [ ] Add the Audiobook compiler, and remember that it just concatetantes files so it is very fast.
 - [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
 
-## Urgent!
-- [ ] Copy audio extras, a merge system/folder may need to be required for this, otherwise wget will not mirror files
+# Secondary
+- [ ] Add the Audiobook compiler, and remember that it just concatetantes files so it is very fast.
 - [ ] Adapt catpea/server to import the extended v2 dist folder, server uses a shell script to copy those files, easy fix.
+- [ ] images now come in sm and lg only, server templates will need to updated
+- [ ] v2 decompiler (this is for later when this program is in use)
+- [ ] Copy audio extras, a merge system/folder may need to be required for this, otherwise wget will not mirror files (this may need a new array in the server object file called files, and whatever is mentioned thre will tag along...)
+
+# Done
+- [x] Add YouTube video thumbnail downloader to the compiler.
+- [x] Create an Apache like "Index Of" for poems that will double as a website mirror.
+- [x] Failure to detect links in yaml database
+- [x] Warrior is missing images.
+- [x] Warrior is missing the audio linked in the introduction poem
 - [x] Remove unused yid-* files to force a new download and thus timestamp, to signal cover image rebuild.
-
-## Refactoring
-
 - [x] There need to be two decompilers one for v1 format and the second for v2.
 - [x] v1 decompiler
 - [x] Tag server objects with a format: 'v1'/'v2' markers to automaticaly tell them apart.
 - [x] Divide code for compiler and recompiler, they should live in separate files.
-- [ ] v2 decompiler (this is for later when this program is in use)
-
-## Nice To have
-
-- [ ] Health monitoring system, review each record with a unit test
 
 # Notes
 

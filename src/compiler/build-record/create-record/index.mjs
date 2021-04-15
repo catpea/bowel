@@ -49,6 +49,7 @@ async function createRecord(recordFile, directory) {
   item.images = listImages(item.html);
   item.links = listLinks(item.html);
 
+
   const requiredFields = ["title", "date", "image", "audio", "id"];
   const configuration = Object.fromEntries(
     Object.keys(item)
@@ -66,6 +67,13 @@ async function createRecord(recordFile, directory) {
   await writeFile( path.join(cacheDirectory, "links.json"), JSON.stringify(item.links, null, "  ") );
   await writeFile( path.join(cacheDirectory, "images.json"), JSON.stringify(item.images, null, "  ") );
   await writeFile(path.join(cacheDirectory, "content.txt"), item.text);
+
+  // if (path.extname(contentFilename) == ".yaml") {
+  //   if (item.id == "westland-warrior-foreword") {
+  //     console.log(listLinks(item.html));
+  //     process.exit()
+  //   }
+  // }
 
   // and the item that is made out of cache
   const recordFileLocation = path.join(cacheDirectory, "record.json");
