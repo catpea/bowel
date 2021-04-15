@@ -1,6 +1,6 @@
 {
   "name": "bowel",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Small build system for server objects.",
   "main": "index.mjs",
   "bin": {
