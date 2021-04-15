@@ -11,6 +11,7 @@ import colors from 'colors';
 import { buildRecord } from "./build-record/index.mjs";
 
 import { resizeCoverImage } from "./resize-cover-image/index.mjs";
+import { downloadVideoThumbnails } from "./download-video-thumbnails/index.mjs"; 
 import { createContactSheetImage } from "./create-contact-sheet-image/index.mjs";
 import { convertAudioToVideo } from "./convert-audio-to-video/index.mjs";
 
@@ -59,10 +60,13 @@ async function createDistribution(ix) {
 
     debug('Generating media...')
     // Create Into Cache based on stuff in files
-    if (ix.coverImages) await resizeCoverImage(directory, record);
+
+    if (ix.contactSheet) await downloadVideoThumbnails(directory, record);
     if (ix.contactSheet) await createContactSheetImage(directory, record);
+
     if (ix.audioVersion) await convertAudioToVideo(directory, record);
 
+    if (ix.coverImages||ix.contactSheet) await resizeCoverImage(directory, record);
 
     debug('Copying files into the distribution directory...')
     // Copy To Dist from Cache

@@ -140,7 +140,7 @@ async function importFiles(so, distDir, webDir, audioDir, imageDir) {
 
       if (item.image) {
         const sourceFile = path.join(webDir, 'images', item.image);
-        const destinationFile = path.join(cacheDirectory, item.image);
+        const destinationFile = path.join(filesDirectory, item.image);
         if (!existsSync(destinationFile)) {
           debug(`Importing main image for yaml item: ${item.image}`);
           await copyFile(sourceFile, destinationFile);

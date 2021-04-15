@@ -57,7 +57,7 @@ async function isOutdated(master, slave) {
   const masterDate = new Date(masterStats.mtime);
   const slaveDate = new Date(slaveStats.mtime);
 
-  if (slaveDate > masterDate) console.log( `isOutdated: outdated (by ${slaveDate - masterDate} ms) file found: ${path.relative(path.resolve('.'), master)} (${masterDate}) is outdated becasue ${path.relative(path.resolve('.'), slave)} (${slaveDate}) has changed.` );
+  if (slaveDate > masterDate) debug( `isOutdated: outdated (by ${slaveDate - masterDate} ms) file found: ${path.relative(path.resolve('.'), master)} (${masterDate}) is outdated becasue ${path.relative(path.resolve('.'), slave)} (${slaveDate}) has changed.` );
   if (slaveDate > masterDate) return true; // the master is outdated;
 
 }

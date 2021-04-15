@@ -28,12 +28,13 @@ async function createContactSheetImage(dataDirectory, entry) {
   const yamlContentFile = path.join(dataDirectory, "content.yaml");
   const database = yaml.load(await readFile(yamlContentFile));
 
-  const destinationFile = path.join(cacheDirectory, entry.image);
+  const destinationFile = path.join(filesDirectory, entry.image);
   const sourceFiles = (await gatherImages(database)).map(i=>path.join(filesDirectory,i));
 
   if(sourceFiles.length === 0) return;
 
   const latestFile = sourceFiles.map(file=>({file, date: new Date(statSync(file).mtime)})).sort((a, b) => b.date - a.date).shift().file;
+
   if(await shouldRecompile(destinationFile, latestFile)){
     debug(`rebuilding cover image for: ${entry.id}`);
 

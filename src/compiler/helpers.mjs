@@ -1,6 +1,7 @@
 import debugContext from 'debug';
 const debug = debugContext('compiler-helpers');
 
+import path from "path";
 import { existsSync, statSync } from "fs";
 import { readFile, readdir } from "fs/promises";
 
@@ -29,7 +30,7 @@ async function contentFile(directory) {
 
 async function shouldRecompile(destinationFile, sourceFile) {
   if (!existsSync(destinationFile)){
-    console.log(`Outdated file, file does not exist ${destinationFile}`);
+    debug(`shouldRecompile: Outdated file, file does not exist ${destinationFile}`);
     return true; // yes it is outdated, it does not even exit
   }
   const destinationStats = statSync(destinationFile);
