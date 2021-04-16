@@ -12,17 +12,18 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 # TODO
 
 ## Primary
-- [ ] Templating system, that us used for a "Add New Post", this may need to be a commander based CLI rather than a menu.
-- [ ] Standardize html from md and yaml, but do not create a bootstrap variant here, just well written html.
-- [ ] Convert standard HTML to bootstrap formatting using cheerio
-- [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
-
-# Secondary
-- [ ] Add the Audiobook compiler, and remember that it just concatetantes files so it is very fast.
-- [ ] Adapt catpea/server to import the extended v2 dist folder, server uses a shell script to copy those files, easy fix.
-- [ ] images now come in sm and lg only, server templates will need to updated
-- [ ] v2 decompiler (this is for later when this program is in use)
-- [ ] Copy audio extras, a merge system/folder may need to be required for this, otherwise wget will not mirror files (this may need a new array in the server object file called files, and whatever is mentioned thre will tag along...)
+- [ ] Add New
+  - [ ] Templating system, that us used for a "Add New Post", this may need to be a commander based CLI rather than a menu.
+- [ ] HTML
+  - [ ] Standardize html from md and yaml, but do not create a bootstrap variant here, just well written html.
+  - [ ] Convert standard HTML to bootstrap formatting using cheerio
+- [ ] More Exports
+  - [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
+  - [ ] Add the Audiobook compiler, and remember that it just concatetantes files so it is very fast.
+- [ ] v2
+  - [ ] v2 decompiler (this is for later when this program is in use)
+  - [ ] Adapt catpea/server to import the extended v2 dist folder, server uses a shell script to copy those files, easy fix.
+  - [ ] Copy audio extras, a merge system/folder may need to be required for this, otherwise wget will not mirror files (this may need a new array in the server object file called files, and whatever is mentioned thre will tag along...)
 
 # Done
 - [x] Add YouTube video thumbnail downloader to the compiler.
