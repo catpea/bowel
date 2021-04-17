@@ -1,0 +1,19 @@
+{
+  "name": "creepycrawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "*",
+    "debug": "^4.3.1",
+    "got": "^11.8.2",
+    "lodash": "^4.17.21",
+    "mime": "^2.5.2"
+  }
+}

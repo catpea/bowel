@@ -18,8 +18,9 @@ import { downloadVideoThumbnails } from "./download-video-thumbnails/index.mjs";
 import { createContactSheetImage } from "./create-contact-sheet-image/index.mjs";
 import { convertAudioToVideo } from "./convert-audio-to-video/index.mjs";
 import { createMirror } from "./create-mirror/index.mjs";
+import { createWebsite } from "./create-website/index.mjs";
 
-import { coverImages, gatherImages } from "../helpers.mjs";
+import { coverImages, gatherImages, getFiles } from "../helpers.mjs";
 
 export default {
   indexParse,
@@ -37,6 +38,9 @@ async function createDistribution(ix) {
 
   const baseDirectory = path.resolve(path.resolve(ix.name));
 
+  const mergeDirectory = path.join(path.resolve("merge"), ix.name);
+  await mkdir(mergeDirectory, { recursive: true });
+
   const projectDirectory = path.join(path.resolve("dist"), ix.name);
   await mkdir(projectDirectory, { recursive: true });
 
@@ -47,6 +51,7 @@ async function createDistribution(ix) {
   await mkdir(projectAudioDirectory, { recursive: true });
 
   debug(`Created distribution directory: ${projectDirectory}`)
+
 
   const data = [];
 
@@ -68,22 +73,28 @@ async function createDistribution(ix) {
     // Create Into Cache based on stuff in files
 
     if (ix.contactSheet) await downloadVideoThumbnails(directory, record);
-
     if (ix.contactSheet) await createContactSheetImage(directory, record);
 
     if (ix.audioVersion) await convertAudioToVideo(directory, record);
 
-    if (ix.coverImages||ix.contactSheet) await resizeCoverImage(directory, record);
+    if (ix.coverImages) await resizeCoverImage(directory, record);
+    if (ix.contactSheet) await resizeCoverImage(directory, record);
 
     debug('Copying files into the distribution directory...')
     // Copy To Dist from Cache
     if (ix.audioVersion) await copyAudio(directory, projectDirectory, record);
     if (ix.localAssets) await copyLocalAssets(directory, projectDirectory, record);
-    if (ix.coverImages||ix.contactSheet) await copyCoverImages(directory, projectDirectory, record);
+
+    if (ix.coverImages) await copyCoverImages(directory, projectDirectory, record);
+    if (ix.contactSheet) await copyCoverImages(directory, projectDirectory, record);
+
     if (ix.contactSheet) await copyVideoThumbnails(directory, projectDirectory, record);
 
 
   }
+
+  debug(`Merging dependencies`)
+  await mergeDependencies(mergeDirectory, projectDirectory);
 
   debug('Creating the new server object file...')
   const recompiled = Object.assign({}, ix, { data });
@@ -91,12 +102,24 @@ async function createDistribution(ix) {
   const outputFile = path.join(projectDirectory, ix.name + ".json");
   await writeFile(outputFile, JSON.stringify(recompiled, null, "  "));
 
+  debug('Creating website...')
+  await createWebsite(projectDirectory, recompiled);
+
   debug('Creating a mirror...')
   await createMirror(projectDirectory, recompiled);
 
   progressBar.stop();
   debug(`Created: ${outputFile}`);
 
+}
+
+async function mergeDependencies(mergeDirectory, projectDirectory) {
+  for await (const sourceFile of getFiles(mergeDirectory)) {
+    const relativeName = path.relative(mergeDirectory, sourceFile);
+    const destinationFile = path.join(projectDirectory, relativeName)
+    debug(`Copying dependency ${relativeName}`);
+    if(await shouldCopyFile(sourceFile, destinationFile)) await copyFile(sourceFile, destinationFile);
+  }
 }
 
 async function shouldCopyFile(sourceFile, destinationFile) {

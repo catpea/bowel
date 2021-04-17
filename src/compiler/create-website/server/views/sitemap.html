@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head.html', {}); %>
+  </head>
+  <body>
+
+  <%- include('partials/nav.html', {}); %>
+
+
+
+
+
+
+
+    <main class="container">
+      <div class="row">
+        <div class="col-12 col-md-10 col-lg-9">
+          <% books.forEach(function(book,index){ %>
+            <a name="<%= book.name %>"></a>
+            <div class="card bg-warning text-dark mb-4" style="">
+              <div class="card-body">
+                <h5 class="card-title"><%= book.title %> Resources</h5>
+                <p class="card-text"><%= book.description %></p>
+              </div>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item bg-dark"><a class="text-warning" href="/book/<%= book.name %>/<%= book.order %>"><%= book.title %> Home Page&nbsp;&raquo;</a></li>
+                <li class="list-group-item bg-dark"><a class="text-warning" href="/book/<%= book.name %>/toc/<%= book.order %>">Table Of Contents&nbsp;&raquo;</a></li>
+                <% for (const [name, url] of Object.entries(book.links)) { %>
+                  <li class="list-group-item bg-dark"><a class="text-warning" href="<%= url %>"><%= name %> <i class="bi bi-link-45deg text-warning align-text-bottom"></i></a></li>
+                <% } %>
+              </ul>
+            </div>
+
+            <% data[book.name].story.posts.forEach(function(post,index){ %>
+              <a name="<%= post.id %>"></a>
+              <div class="card bg-dark text-warning mb-3 border border-2 border-start border-warning border-top-0 border-bottom-0 border-end-0" style="">
+                <div class="card-body">
+                  <a href="/read/<%= post.bookName %>/<%= post.number %>" class="d-block text-reset text-decoration-none mb-0"><h4 class="card-title mb-0"><div class="text-secondary" style="font-size: .8rem;">#<%= post.number %>:</div> <span class="fw-light"><%= post.title %></span></h4></a>
+                  <div class="small fw-light mb-2">
+                    <%= post.timestamp %>
+                  </div>
+                  <div class="text-muted small">
+                    <%= post.text.split(/:|\.|,/).slice(0,6) + '...' %>
+                  </div>
+                </div>
+                <% if(post.links.length){ %>
+                  <ul class="list-group list-group-flush">
+                    <% post.links.forEach(function(link,index){ %>
+                      <li class="list-group-item bg-dark">
+                        <a href="<%= link.url %>" class="text-muted text-decoration-none small"><span class="text-secondary"><%= index+1 %>.</span> <span class="text-warning"><%= link.title %></span></a> <small class="text-muted">(<%= link.hostname %>)</small>
+                      </li>
+                    <% }); %>
+                  </ul>
+                <% } %>
+                <div class="card-body">
+                  <% if(post.audio){ %><a href="/audio/<%= post.audio %>" class="card-link text-reset text-decoration-none"><i class="bi bi-play-circle align-text-bottom"></i> Listen</a><% } %>
+                  <a href="/read/<%= post.bookName %>/<%= post.number %>" class="card-link text-reset text-decoration-none"><i class="bi bi-eye align-text-bottom"></i> View</a>
+                </div>
+              </div>
+            <% }); %>
+          <% }) %>
+        </div>
+        <div class="col-md-2 col-lg-3 d-none d-md-block">
+          <div class="sticky-sm-top" style="top: 3rem;">
+            <% books.forEach(function(book,index){ %>
+              <a href="#<%= book.name %>" class="btn btn-outline-warning btn-small mb-2 d-block"><i class="bi bi-<%= book.icon %> align-text-bottom"></i> <span class="d-none d-lg-inline"><%= book.title %></span></a>
+            <% }); %>
+            <a href="#top" class="btn btn-outline-warning btn-small mb-2 d-block"><i class="bi bi-arrow-90deg-up"></i> <span class="d-none d-lg-inline">Top</span></a>
+
+          </div>
+        </div>
+      </div>
+    </main><!-- /.container -->
+
+  <%- include('partials/footer.html', {}); %>
+  <%- include('partials/foot.html', {}); %>
+
+  </body>
+</html>

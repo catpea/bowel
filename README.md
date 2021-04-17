@@ -12,19 +12,28 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 # TODO
 
 ## Primary
-- [ ] URGENT: Image credit is missing in bowel and server-objects, this only applies to poetry.
-- [ ] Convert standard HTML to bootstrap formatting using cheerio. THis needs cards, should this happen in the server?
+- [ ] Internalize the server/wget build system, use the server in a sub module mode, and then shell out the wget.
+
+## Potential
+- [ ] check for indexes that point to removed record-directories and remove them (put use the trash bin, not rimraf)
+- [ ] Add fallback image if record is missing an image (poetry-cover.jpg)
+- [ ] Should record injection (add new post) be internalized?
 - [ ] More Exports
   - [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
-  - [ ] Add the Audiobook compiler, and remember that it just concatetantes files so it is very fast.
 - [ ] v2
-  - [ ] v2 decompiler (this is for later when this program is in use)
   - [ ] Adapt catpea/server to import the extended v2 dist folder, server uses a shell script to copy those files, easy fix.
-  - [ ] Copy audio extras, a merge system/folder may need to be required for this, otherwise wget will not mirror files (this may need a new array in the server object file called files, and whatever is mentioned thre will tag along...)
-- [ ] Internalize the server/wget build system, use the server in a sub module mode, and then shell out the wget.
-- [ ] check for indexes that point to removed record-directories and remove them (put use the trash bin, not rimraf)
+  - [ ] v2 decompiler (this is for later when this program is in use)
+
+# Audio Book
+- [ ] Add the Audiobook compiler, and remember that it just concatetantes files so it is very fast.
+- [ ] Add Cover Image    
+- [ ] Setup With Amazon
 
 # Done
+- [x] Add print field
+- [x] Convert standard HTML to bootstrap formatting using cheerio. This needs cards, should this happen in the server?
+- [x] Copy audio extras, and dependencies... dependencies.json?
+- [x] Image credit is missing in bowel and server-objects, this only applies to poetry.
 - [x] Add YouTube video thumbnail downloader to the compiler.
 - [x] Create an Apache like "Index Of" for poems that will double as a website mirror.
 - [x] Failure to detect links in yaml database

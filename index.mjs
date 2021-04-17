@@ -34,14 +34,15 @@ program.command('analyze <file>')
 
 program.command('decompile <file>')
   .description('Decompile a JSON server-object file.')
+  .option('--root-dir <dir>', 'Path to root of repository.')
   .option('--dist-dir <dir>', 'Path to dist directory.')
   .option('--web-dir <dir>', 'Root of local things linked in html (web root).')
   .option('--audio-dir <dir>', 'Path to audio files.')
   .option('--image-dir <dir>', 'Path to images.')
   .option('--yaml-db <dir>', 'Path to YAML database directory.')
   .action(async (file, options) => {
-    const {distDir, webDir, audioDir, imageDir, yamlDb } = options;
-    await decompile({target:file, distDir, webDir, audioDir, imageDir, yamlDb});
+    const {rootDir, distDir, webDir, audioDir, imageDir, yamlDb } = options;
+    await decompile({target:file, rootDir, distDir, webDir, audioDir, imageDir, yamlDb});
   });
 
 program.command('compile <directory>')
@@ -64,6 +65,36 @@ program.command('create <template> <destination>')
 
 program.parse(process.argv);
 
+async function analyze({target}){
+  const so = await analyzer.readServerObject(target);
+  const schema = await analyzer.getSchema(so);
+  console.log(schema);
+}
+
+async function decompile({target, rootDir, distDir, webDir, audioDir, imageDir, yamlDb}){
+  const so = await decompiler.readServerObject(target);
+  try{
+    if( !rootDir ) {throw new Error('ERROR: --root-dir is unspecified: please specify the root directory so that general dependencies can be copied.');}
+    if( !distDir ) {throw new Error('ERROR: --dist-dir is unspecified: please specify the dist directory so that generated assets may be fully imported...');}
+    if( so.localAssets && (!webDir) ) { throw new Error('ERROR: --web-dir is unspecified, it is required for copying web assets (local to the webserver) that linked in the texts/posts.');}
+    if( so.contactSheet && (!webDir) ) { throw new Error('ERROR: --web-dir is unspecified, it is required for copying image files related to contact sheet (page image).');}
+    if( so.audioVersion && (!audioDir) ) { throw new Error('ERROR: --audio-dir is unspecified, it is required to import audio files that go along with the data.');}
+    if( so.coverImages && (!imageDir) ) { throw new Error('ERROR: --image-dir is unspecified, it is required to copy main images');}
+    if( so.yamlDatabase && (!yamlDb) ) { throw new Error('ERROR: --yaml-db is unspecified, it is required to copy yaml formatted data that is then converted to cache/content.html');}
+  }catch(e){
+    console.log(e.message);
+    process.exit(1);
+  }
+  await decompiler[so.format||'v1'].createIndex(so); // now we know order, and book metadata
+  await decompiler[so.format||'v1'].createData(so, yamlDb); // now poems and their configuration has been stored
+  await decompiler[so.format||'v1'].importFiles(so, rootDir, distDir, webDir, audioDir, imageDir); // now assets have been imported.
+}
+
+async function compile({target}){
+  const ix = await compiler.indexParse(target);
+  await compiler.createDistribution(ix);
+}
+
 async function create({name, template, destination}){
   const command = path.join(__dirname, 'templates', template, 'index.mjs');
 
@@ -77,38 +108,4 @@ async function create({name, template, destination}){
 
   const { stdout } = await execFile(command, commandArguments);
   if(stdout.trim()) debug(stdout);
-}
-
-async function analyze({target}){
-
-  const so = await analyzer.readServerObject(target);
-  const schema = await analyzer.getSchema(so);
-  console.log(schema);
-
-}
-
-async function decompile({target, distDir, webDir, audioDir, imageDir, yamlDb}){
-  const so = await decompiler.readServerObject(target);
-
-  try{
-    if( !distDir ) {throw new Error('ERROR: --dist-dir is unspecified: please specify the dist directory so that generated assets may be fully imported...');}
-    if( so.localAssets && (!webDir) ) { throw new Error('ERROR: --web-dir is unspecified, it is required for copying web assets (local to the webserver) that linked in the texts/posts.');}
-    if( so.contactSheet && (!webDir) ) { throw new Error('ERROR: --web-dir is unspecified, it is required for copying image files related to contact sheet (page image).');}
-    if( so.audioVersion && (!audioDir) ) { throw new Error('ERROR: --audio-dir is unspecified, it is required to import audio files that go along with the data.');}
-    if( so.coverImages && (!imageDir) ) { throw new Error('ERROR: --image-dir is unspecified, it is required to copy main images');}
-    if( so.yamlDatabase && (!yamlDb) ) { throw new Error('ERROR: --yaml-db is unspecified, it is required to copy yaml formatted data that is then converted to cache/content.html');}
-  }catch(e){
-    console.log(e.message);
-    process.exit(1);
-  }
-
-  await decompiler[so.format||'v1'].createIndex(so); // now we know order, and book metadata
-  await decompiler[so.format||'v1'].createData(so, yamlDb); // now poems and their configuration has been stored
-  await decompiler[so.format||'v1'].importFiles(so, distDir, webDir, audioDir, imageDir); // now assets have been imported.
-
-}
-
-async function compile({target}){
-  const ix = await compiler.indexParse(target);
-  await compiler.createDistribution(ix);
 }

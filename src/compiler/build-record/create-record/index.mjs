@@ -1,30 +1,35 @@
-import debugContext from 'debug';
-const debug = debugContext('create-record');
+import debugContext from "debug";
+const debug = debugContext("create-record");
 
 import cheerio from "cheerio";
 
 import marked from "marked";
 import markedCustom from "marked";
-const markedRenderer = { paragraph(text) { return `<div class="section">\n${text.split('\n').map(s=>`<p>${s}</p>`).join('\n')}\n</div>\n`; } };
+const markedRenderer = {
+  paragraph(text) {
+    return `<div class="section">\n${text
+      .split("\n")
+      .map((s) => `<p>${s}</p>`)
+      .join("\n")}\n</div>\n`;
+  },
+};
 markedCustom.use({ renderer: markedRenderer });
 
 import yaml from "js-yaml";
 
-import handlebars from 'handlebars';
-import handlebarsHelpers from 'handlebars-helpers';
+import handlebars from "handlebars";
+import handlebarsHelpers from "handlebars-helpers";
 var helpers = handlebarsHelpers({
-  handlebars: handlebars
+  handlebars: handlebars,
 });
 
-import pretty from 'pretty';
+import pretty from "pretty";
 
 import { contentFile } from "../../helpers.mjs";
 import path from "path";
-import { writeFile, readFile, } from "fs/promises";
+import { writeFile, readFile } from "fs/promises";
 
-export {
-  createRecord
-};
+export { createRecord };
 
 async function createRecord(recordFile, directory) {
   const dataDirectory = directory;
@@ -35,11 +40,9 @@ async function createRecord(recordFile, directory) {
 
   // find html
   let html = "";
-
   const contentFilename = await contentFile(directory);
   debug(`Content filename for ${item.id} is: ${contentFilename}`);
-  const content = (await readFile(path.join(directory, contentFilename))).toString();
-
+  const content = ( await readFile(path.join(directory, contentFilename)) ).toString();
   if (path.extname(contentFilename) == ".html") {
     html = content;
   } else if (path.extname(contentFilename) == ".md") {
@@ -50,10 +53,11 @@ async function createRecord(recordFile, directory) {
 
   // fill in the object
   item.html = html;
-  item.text = textVersion(item.html);
-  item.images = listImages(item.html);
-  item.links = listLinks(item.html);
-
+  item.text = textVersion(item.html, item);
+  item.bootstrap = bootstrapVersion(item.html, item);
+  item.print = printVersion(item.html, item);
+  item.images = listImages(item.html, item);
+  item.links = listLinks(item.html, item);
 
   const requiredFields = ["title", "date", "image", "audio", "id"];
   const configuration = Object.fromEntries(
@@ -62,35 +66,121 @@ async function createRecord(recordFile, directory) {
       .map((i) => [i, item[i]])
   );
 
-  debug(`Creating record cache for: ${item.id}`)
+  debug(`Creating record cache for: ${item.id}`);
   // content that cache is created from
-  await writeFile( path.join(dataDirectory, "configuration.json"), JSON.stringify(configuration, null, "  ") );
+  await writeFile(
+    path.join(dataDirectory, "configuration.json"),
+    JSON.stringify(configuration, null, "  ")
+  );
 
   // cache of processed content and options
-  await writeFile( path.join(cacheDirectory, "configuration.json"), JSON.stringify(configuration, null, "  ") );
+  await writeFile(
+    path.join(cacheDirectory, "configuration.json"),
+    JSON.stringify(configuration, null, "  ")
+  );
   await writeFile(path.join(cacheDirectory, "content.html"), item.html);
-  await writeFile( path.join(cacheDirectory, "links.json"), JSON.stringify(item.links, null, "  ") );
-  await writeFile( path.join(cacheDirectory, "images.json"), JSON.stringify(item.images, null, "  ") );
+  await writeFile(
+    path.join(cacheDirectory, "links.json"),
+    JSON.stringify(item.links, null, "  ")
+  );
+  await writeFile(
+    path.join(cacheDirectory, "images.json"),
+    JSON.stringify(item.images, null, "  ")
+  );
   await writeFile(path.join(cacheDirectory, "content.txt"), item.text);
-
-  // if (path.extname(contentFilename) == ".yaml") {
-  //   if (item.id == "westland-warrior-foreword") {
-  //     console.log(listLinks(item.html));
-  //     process.exit()
-  //   }
-  // }
 
   // and the item that is made out of cache
   const recordFileLocation = path.join(cacheDirectory, "record.json");
-  await writeFile( recordFileLocation, JSON.stringify(item, null, "  ") );
-  debug(`The ${item.id} record was created at: ${item.id}`)
+  await writeFile(recordFileLocation, JSON.stringify(item, null, "  "));
+  debug(`The ${item.id} record was created at: ${item.id}`);
 
   return item;
 }
 
+function printVersion(html, entry) {
+  const $ = cheerio.load(html);
+  const links = [];
 
+  $("div.section").each(function (i, elem) {
+    $(this).addClass("avoid-break-inside");
+    $(this).css({ "padding-bottom": "2rem" });
+  });
 
+  $("div.section > hr").each(function (i, elem) {
+    $(this).replaceWith(`<br>`);
+  });
 
+  $("div.section > p").each(function (i, elem) {
+    this.tagName = "div";
+    $(this).addClass("paragraph");
+  });
+
+  $("a").each(function (i, elem) {
+    const number = links.length + 1;
+    const url = $(this).attr("href");
+    links.push({ number, url });
+    $(this).replaceWith(`<span>${$(this).text()}<sup>[${number}]</sup></span>`);
+  });
+
+  if (links.length > 0) {
+    const linkHtml = `
+    <div class="break-after">&nbsp;</div>
+    <div>
+      <div class="section" style="padding-bottom: 1rem;">${ entry.title } References</div>
+      ${links.map((link) => `<div>[${link.number}]: ${link.url}</div>`).join("\n")}
+    </div>
+    `;
+    $("body").append(linkHtml);
+  }
+
+  let updated = pretty($("body").html(), { ocd: true });
+  updated = updated.replace(/&apos;/gi, "'");
+  updated = updated.replace(/&quot;/gi, '"');
+  updated = updated.replace(/&amp;/gi, "&");
+  return updated;
+}
+
+function bootstrapVersion(html) {
+  const $ = cheerio.load(html);
+
+  $("div.section > hr").each(function (i, elem) {
+    $(this)
+      .parent()
+      .replaceWith(`<div class="mb-5 section-spacer">&nbsp;</div>`);
+  });
+
+  $("div.section > p").each(function (i, elem) {
+    this.tagName = "div";
+    $(this).addClass("paragraph");
+  });
+
+  $("div.section").each(function (i, elem) {
+    $(this).wrap(
+      `<div class="card card-section bg-dark text-warning shadow"></div>`
+    );
+  });
+
+  $("div.section").each(function (i, elem) {
+    $(this).addClass("card-body mb-0 my-2");
+  });
+
+  $("div.section > div.paragraph").each(function (i, elem) {
+    $(this).addClass("card-text card-stanza my-5 text-center");
+  });
+
+  /// FIX
+  $("div.section > img").each(function (i, elem) {
+    $(this).addClass("w-100");
+  });
+
+  let updated = pretty($("body").html(), { ocd: true });
+  updated = updated.replace(/&apos;/gi, "'");
+  updated = updated.replace(/&quot;/gi, '"');
+  updated = updated.replace(/&amp;/gi, "&");
+
+  return updated;
+
+}
 
 function textVersion(html) {
   // This is the normalized text version.
@@ -160,9 +250,7 @@ function listLinks(html) {
   return list;
 }
 
-
-function yamlDatabaseToHtml(content){
-
+function yamlDatabaseToHtml(content) {
   const htmlTemplate = `
   {{#is this.type 'quote'}}
     <div class="section">
@@ -264,11 +352,11 @@ function yamlDatabaseToHtml(content){
   let html = "";
   const template = handlebars.compile(htmlTemplate);
 
-  for( let element of content ){
-    if(element.text) element.text = marked(element.text);
+  for (let element of content) {
+    if (element.text) element.text = marked(element.text);
     html += template(element);
   }
 
-  html = pretty(html, {ocd: true});
+  html = pretty(html, { ocd: true });
   return html;
 }

@@ -1,12 +1,14 @@
 import debugContext from 'debug';
 const debug = debugContext('helpers');
 
-import { readFile } from "fs/promises";
+import { resolve } from 'path';
+import { readdir, readFile } from "fs/promises";
 
 export {
   readServerObject,
   gatherImages,
   coverImages,
+  getFiles,
 };
 
 const coverImages = [
@@ -42,4 +44,17 @@ async function readServerObject(target) {
   const so = JSON.parse((await readFile(target)).toString());
   debug(`Server object format: ${so.format}`);
   return so;
+}
+
+
+async function* getFiles(dir) {
+  const dirents = await readdir(dir, { withFileTypes: true });
+  for (const dirent of dirents) {
+    const res = resolve(dir, dirent.name);
+    if (dirent.isDirectory()) {
+      yield* getFiles(res);
+    } else {
+      yield res;
+    }
+  }
 }

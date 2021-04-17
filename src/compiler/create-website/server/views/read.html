@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <%- include('partials/head.html', {}); %>
+  </head>
+  <body>
+
+  <%- include('partials/nav.html', {}); %>
+
+  <main class="container">
+
+    <div class="row">
+      <div class="col">
+       <div class="card bg-dark text-white shadow mb-5">
+
+         <div class="card-body">
+           <h1 class="card-title text-warning">#<%= post.number %>: <%= post.title %></h1>
+           <p class="card-text text-warning small"><%= post.timestamp %></p>
+         </div>
+
+         <% if(post.audio){ %>
+         <div class="card-body">
+           <div class="mb-1"><span class="text-info small align-text-bottom"> <i class="bi bi-info-circle-fill align-text-bottom"></i> Available as mp3 audio and narrated by the author.</span></div>
+           <div class="mb-1"><a href="/audio/<%= post.audio %>" class="btn btn-warning"><i class="bi bi-play-circle align-text-bottom"></i> Listen To Audio Version</a></div>
+         </div>
+         <% } %>
+
+         <% if(post.print){ %>
+         <div class="card-body">
+           <a href="/print/<%= post.bookName %>/<%= post.number %>" class="btn btn-outline-info btn-sm float-end"><i class="bi bi-printer align-text-bottom text-warning"></i> Printer Friendly Version</a>
+         </div>
+         <% } %>
+
+       </div>
+      </div>
+    </div>
+
+
+
+    <div class="row">
+
+     <div class="col-12 col-md-6 col-lg-8 order-2 order-md-1">
+     <%- post.html %>
+     </div>
+
+     <div class="col-12 col-md-6 col-lg-4 order-1 order-md-2">
+      <% if(post.image){ %>
+        <div class="card bg-dark text-white shadow mb-5 sticky-md-top" style="top: 1rem;">
+          <img src="/image/md-<%= post.image %>" class="card-img-top" alt="<%= post.title %>">
+          <div class="card-footer text-muted small">
+            <%= post.title %>
+          </div>
+        </div>
+      <% } %>
+     </div>
+
+
+    </div>
+
+    <% if(post.audio){ %>
+    <div class="row">
+      <div class="col">
+       <div class="card bg-dark text-white shadow mb-5">
+         <div class="card-body">
+           <div class="mb-1"><span class="text-info small align-text-bottom"> <i class="bi bi-info-circle-fill align-text-bottom"></i> Available as mp3 audio and narrated by the author.</span></div>
+           <div class="mb-1"><a href="/audio/<%= post.audio %>" class="btn btn-warning"><i class="bi bi-play-circle align-text-bottom"></i> Listen To Audio Version</a></div>
+         </div>
+       </div>
+      </div>
+    </div>
+    <% } %>
+
+    <% if(post.links.length){ %>
+
+      <div class="row">
+        <a name="references"></a>
+        <div class="col">
+         <div class="card bg-dark text-white shadow mb-5">
+
+           <div class="card-body">
+             <h2 class="card-title text-warning">References</h2>
+
+             <ul class="list-group list-group-flush">
+               <% post.links.forEach(function(link,index){ %>
+                 <li class="list-group-item bg-dark">
+                   <a href="<%= link.url %>" class="text-muted text-decoration-none"><span class="text-secondary"><%= index+1 %>.</span> <span class="text-warning"><%= link.title %></span></a> <small class="text-muted">(<%= link.hostname %>)</small>
+                 </li>
+               <% }); %>
+             </ul>
+
+           </div>
+
+
+         </div>
+        </div>
+      </div>
+
+    <% } %>
+
+
+  </main><!-- /.container -->
+
+  <%- include('partials/footer.html', {}); %>
+  <%- include('partials/foot.html', {}); %>
+
+  </body>
+</html>

@@ -9,7 +9,7 @@ import cliProgress from 'cli-progress';
 import colors from 'colors';
 import yaml from 'js-yaml';
 
-import { readServerObject, gatherImages } from "../../helpers.mjs";
+import { readServerObject, gatherImages, } from "../../helpers.mjs";
 
 export default {
   createIndex,
@@ -17,6 +17,8 @@ export default {
   importFiles,
   readServerObject,
 };
+
+
 
 async function createIndex(so) {
   const baseDirectory = path.resolve(path.join(".", so.name));
@@ -82,7 +84,7 @@ async function createData(so, yamlDb) {
     debug(`Creating configuration file and cache...`);
     // create configuration
     const dynamicFields = ["text", "images", "links", "print"];
-    const requiredFields = ["title", "date", "image", "audio", "id"];
+    const requiredFields = ["title", "date", "image", "artwork", "audio", "id"];
     const configuration = Object.fromEntries(
       Object.keys(item)
         .filter((i) => requiredFields.includes(i))
@@ -97,14 +99,16 @@ async function createData(so, yamlDb) {
     await writeFile( path.join(cacheDirectory, "images.json"), JSON.stringify(item.images, null, "  ") );
     await writeFile(path.join(cacheDirectory, "content.txt"), item.text);
 
-    debug(`Creating record.json in cache directory...`)
-    await writeFile( path.join(cacheDirectory, "record.json"), JSON.stringify(item, null, "  ") );
+    // DO NOT create record.json, too much changes between releases, it needs to be re-created
+    // debug(`Creating record.json in cache directory...`)
+    // await writeFile( path.join(cacheDirectory, "record.json"), JSON.stringify(item, null, "  ") );
+
   }
   debug(`Finished creating data, cache and records.`)
   progressBar.stop();
 }
 
-async function importFiles(so, distDir, webDir, audioDir, imageDir) {
+async function importFiles(so, rootDir, distDir, webDir, audioDir, imageDir) {
   const baseDirectory = path.resolve(path.join(".", so.name));
 
   const progressBar = new cliProgress.SingleBar({ format: 'Importing Files: |' + colors.yellow('{bar}') + '| {percentage}% || {value}/{total} Entries', barCompleteChar: '\u2588', barIncompleteChar: '\u2591', hideCursor: true }, cliProgress.Presets.shades_classic);
@@ -112,6 +116,19 @@ async function importFiles(so, distDir, webDir, audioDir, imageDir) {
   let progressCounter = 0;
 
 
+  const mergeDirectory = path.join(path.resolve('merge'), so.name);
+  if (so.dependencies) {
+    for(const [src, dest] of Object.entries(so.dependencies)){
+      const destinationDir = path.join(mergeDirectory, dest);
+      await mkdir(destinationDir, { recursive: true });
+        const sourceFile = path.join(rootDir, src);
+        const destinationFile = path.join(destinationDir, path.basename(src));
+        if (!existsSync(destinationFile)) {
+          debug(`Importing dependency: ${src} into ${dest}`);
+          await copyFile(sourceFile, destinationFile);
+        }
+    }
+  }
 
   for (const item of so.data) {
     progressBar.update(progressCounter++);
@@ -120,9 +137,10 @@ async function importFiles(so, distDir, webDir, audioDir, imageDir) {
 
     //const mainDirectory = path.join(baseDirectory, item.id);
     const dataDirectory = path.join(baseDirectory, item.id);
-    const filesDirectory = path.join(baseDirectory, item.id, "files");
-    const cacheDirectory = path.join(baseDirectory, item.id, "cache");
+    const filesDirectory = path.join(baseDirectory, item.id, 'files');
+    const cacheDirectory = path.join(baseDirectory, item.id, 'cache');
     await mkdir(filesDirectory, { recursive: true });
+
 
     if(so.yamlDatabase){
 
