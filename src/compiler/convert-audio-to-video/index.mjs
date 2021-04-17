@@ -44,8 +44,8 @@ async function convertAudioToVideo(dataDirectory, entry) {
     // const { stdout } = await execFile(command, commandArguments);
     // if(stdout.trim()) debug(stdout);
 
-    utimesSync(destinationFile, new Date(), new Date());
-    console.log(`WARNING: compiler/convert-audio-to-video is just touching files, it is not creating the actual videos!!!!!!!`);
+    //utimesSync(destinationFile, new Date(), new Date());
+    //console.log(`WARNING: compiler/convert-audio-to-video is just touching files, it is not creating the actual videos!!!!!!!`);
 
 
   }

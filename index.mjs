@@ -9,47 +9,74 @@ process.on('unhandledRejection', (reason, p) => {
 
 import { Command } from 'commander/esm.mjs';
 
+import path from "path";
+import util from 'util';
+import child_process from 'child_process';
+const execFile = util.promisify(child_process.execFile);
+
 import analyzer from './src/analyzer/index.mjs';
 import decompiler from './src/decompiler/index.mjs';
 import compiler from './src/compiler/index.mjs';
 
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
 const program = new Command();
 program.version('2.0.0');
 
-program
-  .option('-a, --analyze <file>', 'Print statistics and other useful information.')
-  .option('-d, --decompile <file>', 'Decompile a JSON server-object file.')
-  .option('-c, --compile <directory>', 'Compile directory tree into a JSON server-object file.')
+program.command('analyze <file>')
+  .description('Print statistics and other useful information.')
+  .action(async (file) => {
+    debug(`using the analyzer`);
+    await analyze({target:file});
+  });
 
+program.command('decompile <file>')
+  .description('Decompile a JSON server-object file.')
   .option('--dist-dir <dir>', 'Path to dist directory.')
   .option('--web-dir <dir>', 'Root of local things linked in html (web root).')
   .option('--audio-dir <dir>', 'Path to audio files.')
   .option('--image-dir <dir>', 'Path to images.')
-  .option('--yaml-db <dir>', 'Path to YAML database directory.');
+  .option('--yaml-db <dir>', 'Path to YAML database directory.')
+  .action(async (file, options) => {
+    const {distDir, webDir, audioDir, imageDir, yamlDb } = options;
+    await decompile({target:file, distDir, webDir, audioDir, imageDir, yamlDb});
+  });
+
+program.command('compile <directory>')
+  .description('Compile directory tree into a JSON server-object file.')
+  .action(async (directory) => {
+    debug(`using the compiler`);
+    await compile({target:directory});
+  });
+
+program.command('create <template> <destination>')
+  .description('Create a new entry based on specified template.')
+  .option('-n, --name <name>', 'Name of item to create')
+  .action(async (template, destination, options) => {
+    debug(`using the injector`);
+    debug({name: options.name, template, destination});
+    destination = path.resolve(destination);
+    create({name: options.name, template, destination});
+  });
+
 
 program.parse(process.argv);
-const options = program.opts();
-main(options);
 
-async function main(options){
+async function create({name, template, destination}){
+  const command = path.join(__dirname, 'templates', template, 'index.mjs');
 
-  if(0){
+  let gah = [];
+  if(name) gah = gah.concat(['--name', 'NAME',])
+  gah = gah.concat(['--destination', 'DESTINATION'])
 
-  } else if (options.analyze){
-    debug(`using the analyzer`);
-    await analyze({target:options.analyze});
+  const commandArguments = gah
+  .map(i=>i==='NAME'?name:i)
+  .map(i=>i==='DESTINATION'?destination:i);
 
-  } else if (options.decompile){
-    debug(`using the decompiler`);
-    const {distDir, webDir, audioDir, imageDir, yamlDb } = options;
-    await decompile({target:options.decompile, distDir, webDir, audioDir, imageDir, yamlDb});
-
-  } else if (options.compile){
-    debug(`using the compiler`);
-    await compile({target:options.compile});
-
-  } // end if
-
+  const { stdout } = await execFile(command, commandArguments);
+  if(stdout.trim()) debug(stdout);
 }
 
 async function analyze({target}){

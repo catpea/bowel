@@ -2,7 +2,12 @@ import debugContext from 'debug';
 const debug = debugContext('create-record');
 
 import cheerio from "cheerio";
+
 import marked from "marked";
+import markedCustom from "marked";
+const markedRenderer = { paragraph(text) { return `<div class="section">\n${text.split('\n').map(s=>`<p>${s}</p>`).join('\n')}\n</div>\n`; } };
+markedCustom.use({ renderer: markedRenderer });
+
 import yaml from "js-yaml";
 
 import handlebars from 'handlebars';
@@ -38,7 +43,7 @@ async function createRecord(recordFile, directory) {
   if (path.extname(contentFilename) == ".html") {
     html = content;
   } else if (path.extname(contentFilename) == ".md") {
-    html = marked(content);
+    html = markedCustom(content);
   } else if (path.extname(contentFilename) == ".yaml") {
     html = yamlDatabaseToHtml(yaml.load(content));
   }
@@ -185,7 +190,7 @@ function yamlDatabaseToHtml(content){
       </header>
       <figure>
         <a href="https://www.youtube.com/watch?v={{id}}" class="no-tufte-underline" title="{{title}}">
-          <img src="image/yid-{{id}}.jpg" alt="{{title}}" style="width: 100%; height: auto;">
+          <img src="image/yid-{{id}}.jpg" alt="{{title}}">
         </a>
         <figcaption>{{title}}</figcaption>
       </figure>
@@ -219,7 +224,7 @@ function yamlDatabaseToHtml(content){
       <h2>{{title}}</h2>
     </header>
       <figure>
-        <img src="image/{{url}}" alt="{{title}}" style="width: 100%; height: auto;">
+        <img src="image/{{url}}" alt="{{title}}">
       </figure>
       {{{text}}}
   </div>
@@ -250,7 +255,7 @@ function yamlDatabaseToHtml(content){
         <h2>Business Practice: {{title}}</h2>
       </header>
       <figure>
-        <img src="image/{{url}}" alt="{{title}}" style="width: 100%; height: auto;">
+        <img src="image/{{url}}" alt="{{title}}">
       </figure>
       {{{text}}}
     </div>

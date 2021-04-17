@@ -51,7 +51,7 @@ async function downloadVideoThumbnails(dataDirectory, entry) {
     const downloadUrl = `https://img.youtube.com/vi/${video.id}/0.jpg`;
     const destinationFile = path.join(filesDirectory, `yid-${video.id}.jpg`);
     if(!existsSync(destinationFile)){
-      console.log('Downloading Thumbnail',destinationFile)
+      debug('Downloading Thumbnail',destinationFile)
       const response = await fetch(downloadUrl);
       if (!response.ok) throw new Error(`unexpected response ${response.statusText}`);
       await streamPipeline(response.body, createWriteStream(destinationFile));

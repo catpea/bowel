@@ -18,10 +18,9 @@ async function buildRecord(directory) {
   const cacheValid = await isCacheValid(recordFile, directory);
 
   if (cacheValid) {
-    //console.log(`Valid cache for ${recordFile}`);
     Object.assign(record, await readRecord(recordFile, directory));
   } else {
-    console.log(`Invalid cache for ${recordFile}`);
+    debug(`Invalid cache for ${recordFile}`);
     Object.assign(record, await createRecord(recordFile, directory));
   }
 
@@ -48,8 +47,6 @@ async function isCacheValid(recordFile, directory) {
 
 
 async function isOutdated(master, slave) {
-  // if (!existsSync(master))
-  // console.log(slave, fs.existsSync(slave));
   if (!existsSync(master)) return true; // yes it is outdated, it does not even exist
 
   const masterStats = statSync(master);

@@ -12,11 +12,8 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 # TODO
 
 ## Primary
-- [ ] Add New
-  - [ ] Templating system, that us used for a "Add New Post", this may need to be a commander based CLI rather than a menu.
-- [ ] HTML
-  - [ ] Standardize html from md and yaml, but do not create a bootstrap variant here, just well written html.
-  - [ ] Convert standard HTML to bootstrap formatting using cheerio
+- [ ] URGENT: Image credit is missing in bowel and server-objects, this only applies to poetry.
+- [ ] Convert standard HTML to bootstrap formatting using cheerio. THis needs cards, should this happen in the server?
 - [ ] More Exports
   - [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
   - [ ] Add the Audiobook compiler, and remember that it just concatetantes files so it is very fast.
@@ -24,6 +21,8 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
   - [ ] v2 decompiler (this is for later when this program is in use)
   - [ ] Adapt catpea/server to import the extended v2 dist folder, server uses a shell script to copy those files, easy fix.
   - [ ] Copy audio extras, a merge system/folder may need to be required for this, otherwise wget will not mirror files (this may need a new array in the server object file called files, and whatever is mentioned thre will tag along...)
+- [ ] Internalize the server/wget build system, use the server in a sub module mode, and then shell out the wget.
+- [ ] check for indexes that point to removed record-directories and remove them (put use the trash bin, not rimraf)
 
 # Done
 - [x] Add YouTube video thumbnail downloader to the compiler.
@@ -36,6 +35,13 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 - [x] v1 decompiler
 - [x] Tag server objects with a format: 'v1'/'v2' markers to automaticaly tell them apart.
 - [x] Divide code for compiler and recompiler, they should live in separate files.
+- [x] HTML
+  - [x] Standardize html from md and yaml, but do not create a bootstrap variant here, just well written html.
+    - [x] YAML Database is already standardized witht the HTML template
+    - [x] Existing poetry is in .section/p format and this is acceptable
+    - [x] Markdown format needs .section class (in md \n is ignored this is great! it makes a p in content html, but is easily readable in content.md state)
+- [x] Add New
+  - [x] A sophisticated template system, that us used for a "Add New Post", this may need to be a commander based CLI rather than a menu.
 
 # Notes
 
@@ -54,17 +60,33 @@ if you never touch(1) the content.html, then it will never be re-compiled.
 
 ## Importing a non-narrated resource
 
-```shell
-
-bowel --decompile ~/Universe/Development/warrior/dist/server-object/westland-warrior.json --image-dir ~/Universe/Development/warrior/docs/images/
-
-```
-
-## Importing a narrated resource featuring local web assets
 
 ```shell
 
-bowel --decompile ~/Universe/Development/poetry/dist/server-object/furkies-purrkies.json --image-dir ~/Universe/Development/poetry/src/image/ --audio-dir ~/Universe/Development/poetry/src/audio/ --web-dir ~/Universe/Development/poetry/docs/ --release-dir ~/Universe/Development/poetry/dist/
+# Importing Examples
+
+bowel decompile ../warrior/dist/server-object/westland-warrior.json --dist-dir ../warrior/dist/ --web-dir ../warrior/docs/ --yaml-db ../warrior/db/
+
+
+bowel decompile ~/Universe/Development/poetry/dist/server-object/furkies-purrkies.json --image-dir ~/Universe/Development/poetry/src/image/ --audio-dir ~/Universe/Development/poetry/src/audio/ --web-dir ~/Universe/Development/poetry/docs/ --release-dir ~/Universe/Development/poetry/dist/
+
+# Adding New Records
+
+bowel create html furkies-purrkies
+bowel create md furkies-purrkies
+bowel create --name the-welder yaml westland-warrior
+
+env DEBUG=* bowel create html furkies-purrkies
+env DEBUG=* bowel create md furkies-purrkies
+env DEBUG=* bowel create --name the-welder yaml westland-warrior
+
+# Compilation Examples
+
+bowel compile ./westland-warrior;
+bowel compile ./furkies-purrkies;
+
+env DEBUG=* bowel compile ./westland-warrior;
+env DEBUG=* bowel compile ./furkies-purrkies;
 
 
 ```

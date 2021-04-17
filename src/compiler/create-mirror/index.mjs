@@ -13,6 +13,7 @@ export {
 };
 
 async function createMirror(baseDirectory, so) {
+  debug(`Creating LTS mirror...`)
   const htmlTemplate = `
   <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
   <html>
@@ -77,7 +78,7 @@ async function createMirror(baseDirectory, so) {
         <div style="margin-top: 20rem; page-break-before: always;">
           <a name="{{id}}"></a>
           <h2>{{title}}</h2>
-          <a href="audio/{{audio}}">Listen To Audio Version</a>
+          ${so.audioVersion?'<a href="audio/{{audio}}">Listen To Audio Version</a>':''}
           <hr>
           <img src="image/lg-{{image}}">
           {{{html}}}
@@ -89,5 +90,7 @@ async function createMirror(baseDirectory, so) {
   `.trim();
   const template = handlebars.compile(htmlTemplate);
   const html = pretty(template(so), {ocd: true});
-  await writeFile( path.join(baseDirectory, "index.html"), html);
+  const mirrorLocation = path.join(baseDirectory, "index.html");
+  await writeFile(mirrorLocation, html);
+  debug(`Mirror created at: ${mirrorLocation}`)
 }

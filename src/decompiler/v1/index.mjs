@@ -92,7 +92,7 @@ async function createData(so, yamlDb) {
     await writeFile( path.join(cacheDirectory, "configuration.json"), JSON.stringify(configuration, null, "  ") ); // cache of processed content and options
 
     debug(`Creating content related files and cache...`);
-    await writeFile(path.join(cacheDirectory, "content.html"), item.html);
+    if(!so.yamlDatabase) await writeFile(path.join(cacheDirectory, "content.html"), item.html);
     await writeFile( path.join(cacheDirectory, "links.json"), JSON.stringify(item.links, null, "  ") );
     await writeFile( path.join(cacheDirectory, "images.json"), JSON.stringify(item.images, null, "  ") );
     await writeFile(path.join(cacheDirectory, "content.txt"), item.text);

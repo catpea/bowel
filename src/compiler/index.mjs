@@ -68,6 +68,7 @@ async function createDistribution(ix) {
     // Create Into Cache based on stuff in files
 
     if (ix.contactSheet) await downloadVideoThumbnails(directory, record);
+
     if (ix.contactSheet) await createContactSheetImage(directory, record);
 
     if (ix.audioVersion) await convertAudioToVideo(directory, record);
@@ -104,7 +105,7 @@ async function shouldCopyFile(sourceFile, destinationFile) {
   const sourceStats = statSync(sourceFile);
   const destinationDate = new Date(destinationStats.mtime);
   const sourceDate = new Date(sourceStats.mtime);
-  if (sourceDate > destinationDate) console.log( `shouldCopyFile: Outdated file found: ${destinationFile} (${destinationDate}) is outdated becasue ${sourceFile} (${sourceDate}) has changed.` );
+  if (sourceDate > destinationDate) debug( `shouldCopyFile: Outdated file found: ${destinationFile} (${destinationDate}) is outdated becasue ${sourceFile} (${sourceDate}) has changed.` );
   if (sourceDate > destinationDate) return true; // the destination is outdated;
 }
 
@@ -142,18 +143,26 @@ async function copyVideoThumbnails(dataDirectory, distDirectory, entry) {
 }
 
 async function copyLocalAssets(dataDirectory, distDirectory, entry) {
+
   //NOTE: assets are found in .links
   for (const image of entry.images) {
+      const fileName = path.basename(image.url)
+      // if(fileName.startsWith('yid-')) continue;
+
       const filesDirectory = path.join(dataDirectory, "files");
       const cacheDirectory = path.join(dataDirectory, "cache");
       const destinationDirectory = path.join( distDirectory );
+      const sourceFile = path.join(filesDirectory, fileName);
+      const destinationFile = path.join( destinationDirectory, 'image', fileName);
+      if(await shouldCopyFile(sourceFile, destinationFile)) await copyFile(sourceFile, destinationFile);
 
-      for(const coverImage of coverImages){
-        const sourceFile = path.join(cacheDirectory, `${coverImage.id}-${image.url}`);
-        const destinationFile = path.join( destinationDirectory, 'image', `${coverImage.id}-${image.url}` );
-        if(await shouldCopyFile(sourceFile, destinationFile)) await copyFile(sourceFile, destinationFile);
-      }
+      // for(const coverImage of coverImages){
+      //   const sourceFile = path.join(cacheDirectory, `${coverImage.id}-${fileName}`);
+      //   const destinationFile = path.join( destinationDirectory, 'image', `${coverImage.id}-${fileName}` );
+      //   if(await shouldCopyFile(sourceFile, destinationFile)) await copyFile(sourceFile, destinationFile);
+      // }
   }
+
   for (const link of entry.links) {
     if (!link.url.startsWith("http")) {
       const filesDirectory = path.join(dataDirectory, "files");

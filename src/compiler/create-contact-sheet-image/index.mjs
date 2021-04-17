@@ -35,7 +35,11 @@ async function createContactSheetImage(dataDirectory, entry) {
 
   const latestFile = sourceFiles.map(file=>({file, date: new Date(statSync(file).mtime)})).sort((a, b) => b.date - a.date).shift().file;
 
-  if(await shouldRecompile(destinationFile, latestFile)){
+  if(
+    (await shouldRecompile(destinationFile, latestFile))
+    ||
+    (await shouldRecompile(destinationFile, yamlContentFile))
+  ){
     debug(`rebuilding cover image for: ${entry.id}`);
 
     let tile = 3;
@@ -44,6 +48,7 @@ async function createContactSheetImage(dataDirectory, entry) {
     if(sourceFiles > 35) tile = 5;
     if(sourceFiles > 45) tile = 7;
     if(sourceFiles < 9) tile = 2;
+    if(sourceFiles < 5) tile = 2;
     if(sourceFiles < 4) tile = 1;
 
     const command = 'montage';
