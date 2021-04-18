@@ -12,12 +12,14 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 # TODO
 
 ## Primary
+- [ ] Finish the wget --mirror repacement
 - [ ] Internalize the server/wget build system, use the server in a sub module mode, and then shell out the wget.
+  - [ ] links need to be rewritten in the html being saved.
 
 ## Potential
 - [ ] check for indexes that point to removed record-directories and remove them (put use the trash bin, not rimraf)
 - [ ] Add fallback image if record is missing an image (poetry-cover.jpg)
-- [ ] Should record injection (add new post) be internalized?
+- [ ] Should record injection (add new post) be internalized? .... YEAH, it is currently shelled out
 - [ ] More Exports
   - [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
 - [ ] v2
