@@ -2,6 +2,7 @@
 
 import fs from 'fs'
 import path from 'path'
+import EventEmitter from 'events';
 
 import cheerio from 'cheerio'
 import lodash from 'lodash'
@@ -22,14 +23,16 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-let server = null;
 
-export default {
-  start,
-  stop,
+class MyEmitter extends EventEmitter {
+  start(options){
+    return boot(options);
+  }
 }
+const myEmitter = new MyEmitter();
+export default myEmitter;
 
-async function boot(port) {
+async function boot({port, configuration}) {
   const app = new Koa()
 
   app.use(async (ctx, next) => {
@@ -39,16 +42,16 @@ async function boot(port) {
   })
 
   app.use(serve(path.join(__dirname, 'static')));
-  app.use(mount('/image', serve('/home/meow/Universe/Development/poetry2/dist/furkies-purrkies/image')));
-  app.use(mount('/audio', serve('/home/meow/Universe/Development/poetry2/dist/furkies-purrkies/audio')));
+
+  for( const { mountpoint, directory } of configuration.mounts ){
+    app.use(mount(mountpoint, serve(directory)));
+  }
 
   const router = koaRouter()
 
   const options = {
     debug: true,
-    objects: [
-      '/home/meow/Universe/Development/poetry2/dist/furkies-purrkies/furkies-purrkies.json'
-    ],
+    objects: configuration.objects,
     limit: 14,
   }
 
@@ -165,14 +168,10 @@ async function boot(port) {
     })
   }
 
-  return app.listen(port);
-}
 
-async function start(port) {
-  server = boot(port)
-  return server;
-}
-
-async function stop() {
-  server.close()
+  // class MyEmitter extends EventEmitter {}
+  // const myEmitter = new MyEmitter();
+  let server = app.listen(port);
+  myEmitter.emit('start', server);
+  // return myEmitter;
 }

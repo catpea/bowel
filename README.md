@@ -12,9 +12,10 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 # TODO
 
 ## Primary
-- [ ] Finish the wget --mirror repacement
-- [ ] Internalize the server/wget build system, use the server in a sub module mode, and then shell out the wget.
-  - [ ] links need to be rewritten in the html being saved.
+- [ ] During import remove the prefixes in content.html <img src="/image/md-poetry-0025-x.jpg" alt="X"> rename md-poetry-0025-x.jpg to poetry-0025-x.jpg
+- [ ] Images mentined in posts no longer get a sm-/xl- versions as that creates too many files, and creates ambiguity
+- [ ] Connect the build-in server with the crawler.
+- [ ] Make a stand-alone build of warrior using the catpea template, this will replace the existing site.
 
 ## Potential
 - [ ] check for indexes that point to removed record-directories and remove them (put use the trash bin, not rimraf)
@@ -23,7 +24,6 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 - [ ] More Exports
   - [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
 - [ ] v2
-  - [ ] Adapt catpea/server to import the extended v2 dist folder, server uses a shell script to copy those files, easy fix.
   - [ ] v2 decompiler (this is for later when this program is in use)
 
 # Audio Book
@@ -53,6 +53,10 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
     - [x] Markdown format needs .section class (in md \n is ignored this is great! it makes a p in content html, but is easily readable in content.md state)
 - [x] Add New
   - [x] A sophisticated template system, that us used for a "Add New Post", this may need to be a commander based CLI rather than a menu.
+- [x] Finish the wget --mirror repacement
+- [x] Internalize the server/wget build system, use the server in a sub module mode, and then shell out the wget.
+  - [x] links need to be rewritten in the html being saved.
+- [x] SKIPPED due to new server: Adapt catpea/server to import the extended v2 dist folder, server uses a shell script to copy those files, easy fix.
 
 # Notes
 
@@ -76,10 +80,10 @@ if you never touch(1) the content.html, then it will never be re-compiled.
 
 # Importing Examples
 
-bowel decompile ../warrior/dist/server-object/westland-warrior.json --dist-dir ../warrior/dist/ --web-dir ../warrior/docs/ --yaml-db ../warrior/db/
+bowel decompile ../warrior/dist/server-object/westland-warrior.json --root-dir ../warrior --dist-dir ../warrior/dist/ --web-dir ../warrior/docs/ --yaml-db ../warrior/db/
 
 
-bowel decompile ~/Universe/Development/poetry/dist/server-object/furkies-purrkies.json --image-dir ~/Universe/Development/poetry/src/image/ --audio-dir ~/Universe/Development/poetry/src/audio/ --web-dir ~/Universe/Development/poetry/docs/ --release-dir ~/Universe/Development/poetry/dist/
+bowel decompile ~/Universe/Development/poetry/dist/server-object/furkies-purrkies.json --root-dir ../poetry --image-dir ~/Universe/Development/poetry/src/image/ --audio-dir ~/Universe/Development/poetry/src/audio/ --web-dir ~/Universe/Development/poetry/docs/ --release-dir ~/Universe/Development/poetry/dist/
 
 # Adding New Records
 

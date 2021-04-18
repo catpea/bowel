@@ -7,27 +7,48 @@ import pretty from 'pretty';
 import handlebars from 'handlebars';
 
 import server from "./server/index.mjs";
+import crawler from "./creepycrawler/module.mjs";
 
 export {
   createWebsite,
 };
 
-async function createWebsite(baseDirectory, so) {
+function pause(ms){
+  return new Promise(function(resolve, reject){
+    setTimeout(function(){
+      resolve();
+    },ms);
+  });
+}
+
+async function createWebsite(destination, so) {
   debug(`Creating Website`);
-  const websiteRoot = path.join(baseDirectory, "website");
-  const port = 7467;
+  const port = 7468;
+  const address = `http://127.0.0.1:${port}/`;
+  server.on('start', async function(server){
+    debug(`Server running at ${address}`);
+    await pause(90*1000);
+    await crawler({ address, destination });
+    server.close();
+    debug('Server stopped');
+  });
 
-  const options = {
-    port: 7467
+  const configuration = {
+    title: 'Cat Pea University',
+    description: 'Home of Furkies Purrkies and Westland Warrior',
+    objects: [
+      '/home/meow/Universe/Development/poetry2/dist/furkies-purrkies/furkies-purrkies.json',
+      '/home/meow/Universe/Development/poetry2/dist/westland-warrior/westland-warrior.json'
+    ],
+    mounts: [
+      { mountpoint: '/image', directory: '/home/meow/Universe/Development/poetry2/dist/furkies-purrkies/image', },
+      { mountpoint: '/audio', directory: '/home/meow/Universe/Development/poetry2/dist/furkies-purrkies/audio', },
+      { mountpoint: '/image', directory: '/home/meow/Universe/Development/poetry2/dist/westland-warrior/image', },
+      { mountpoint: '/audio', directory: '/home/meow/Universe/Development/poetry2/dist/westland-warrior/audio', },
+    ]
   };
-
-  const instance = server.start(port);
-
-
-  // await scraper(port, websiteRoot);
-  // await server.stop();
-
-  debug(`Website created at: ${websiteRoot}`);
+  server.start({port, configuration });
+  debug(`Website scraped into: ${destination}`);
 }
 
 async function scraper(port, websiteRoot) {

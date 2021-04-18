@@ -31,7 +31,7 @@ import { writeFile, readFile } from "fs/promises";
 
 export { createRecord };
 
-async function createRecord(recordFile, directory) {
+async function createRecord(ix, recordFile, directory) {
   const dataDirectory = directory;
   const cacheDirectory = path.join(dataDirectory, "cache");
 
@@ -56,7 +56,13 @@ async function createRecord(recordFile, directory) {
   item.text = textVersion(item.html, item);
   item.bootstrap = bootstrapVersion(item.html, item);
   item.print = printVersion(item.html, item);
-  item.images = listImages(item.html, item);
+
+  if(ix.contactSheet){
+    item.images = []; // these are video thumbnails so keep it empty;
+  }else{
+    item.images = listImages(item.html, item);
+  }
+
   item.links = listLinks(item.html, item);
 
   const requiredFields = ["title", "date", "image", "audio", "id"];
@@ -67,26 +73,16 @@ async function createRecord(recordFile, directory) {
   );
 
   debug(`Creating record cache for: ${item.id}`);
+
   // content that cache is created from
-  await writeFile(
-    path.join(dataDirectory, "configuration.json"),
-    JSON.stringify(configuration, null, "  ")
-  );
+  await writeFile(path.join(dataDirectory, 'configuration.json'), JSON.stringify(configuration, null, '  '))
 
   // cache of processed content and options
-  await writeFile(
-    path.join(cacheDirectory, "configuration.json"),
-    JSON.stringify(configuration, null, "  ")
-  );
-  await writeFile(path.join(cacheDirectory, "content.html"), item.html);
-  await writeFile(
-    path.join(cacheDirectory, "links.json"),
-    JSON.stringify(item.links, null, "  ")
-  );
-  await writeFile(
-    path.join(cacheDirectory, "images.json"),
-    JSON.stringify(item.images, null, "  ")
-  );
+  await writeFile(path.join(cacheDirectory, 'configuration.json'), JSON.stringify(configuration, null, '  '))
+  await writeFile(path.join(cacheDirectory, 'content.html'), item.html)
+  await writeFile(path.join(cacheDirectory, 'links.json'), JSON.stringify(item.links, null, '  '))
+  await writeFile(path.join(cacheDirectory, 'images.json'), JSON.stringify(item.images, null, '  '))
+
   await writeFile(path.join(cacheDirectory, "content.txt"), item.text);
 
   // and the item that is made out of cache

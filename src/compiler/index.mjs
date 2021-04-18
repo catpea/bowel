@@ -50,6 +50,9 @@ async function createDistribution(ix) {
   const projectAudioDirectory = path.join(projectDirectory, 'audio');
   await mkdir(projectAudioDirectory, { recursive: true });
 
+  const projectWebsiteDirectory = path.join(projectDirectory, 'website');
+  await mkdir(projectWebsiteDirectory, { recursive: true });
+
   debug(`Created distribution directory: ${projectDirectory}`)
 
 
@@ -66,7 +69,7 @@ async function createDistribution(ix) {
 
     debug('Building the record...')
     const directory = path.join(baseDirectory, entry);
-    const record = await buildRecord(directory); // NOTE: data becomes available here, previously it was just an array of indexes.
+    const record = await buildRecord(ix, directory); // NOTE: data becomes available here, previously it was just an array of indexes.
     data.push(record);
 
     debug('Generating media...')
@@ -103,7 +106,7 @@ async function createDistribution(ix) {
   await writeFile(outputFile, JSON.stringify(recompiled, null, "  "));
 
   debug('Creating website...')
-  await createWebsite(projectDirectory, recompiled);
+  await createWebsite(projectWebsiteDirectory, recompiled);
 
   debug('Creating a mirror...')
   await createMirror(projectDirectory, recompiled);

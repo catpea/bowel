@@ -12,7 +12,7 @@ export {
   buildRecord
 };
 
-async function buildRecord(directory) {
+async function buildRecord(ix, directory) {
   const recordFile = path.join(directory, "cache", "record.json");
   const record = {};
   const cacheValid = await isCacheValid(recordFile, directory);
@@ -21,7 +21,7 @@ async function buildRecord(directory) {
     Object.assign(record, await readRecord(recordFile, directory));
   } else {
     debug(`Invalid cache for ${recordFile}`);
-    Object.assign(record, await createRecord(recordFile, directory));
+    Object.assign(record, await createRecord(ix, recordFile, directory));
   }
 
   if(Object.keys(record).length === 0) throw new Error('Returned empty record')

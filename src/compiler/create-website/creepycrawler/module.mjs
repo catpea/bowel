@@ -6,128 +6,106 @@ import invariant from 'invariant';
 import url from 'url';
 import kebabCase from 'lodash/kebabCase.js';
 
+import { performance } from 'perf_hooks';
+
 import stream from 'stream';
 import {promisify} from 'util';
 import fs from 'fs';
+
+import debugContext from 'debug';
+const debug = debugContext('crawlwer');
+const info = debugContext('crawler-info');
+
 const pipeline = promisify(stream.pipeline);
+
 import { writeFile, mkdir } from "fs/promises";
 
-export {mirror, normalizeAddress};
+export default mirror;
 
-function pause(ms){
-  return new Promise(function(resolve, reject){
-    setTimeout(function(){
-      resolve();
-    },ms);
-  });
-}
+async function mirror({address, destination}){
 
-function normalizeAddress(address){
-  const urlObject = new url.URL(address);
-  let cleanTarget = urlObject.href;
-  let ext = path.extname(urlObject.pathname);
-  if(!ext){
-    urlObject.pathname = path.join(urlObject.pathname, 'index.html');
-    cleanTarget = urlObject.href;
-  }
-  return cleanTarget;
-}
-
-async function mirror(address, dest, options){
   let rootAddress = address;
   const rootURL = new URL(rootAddress);
+  const processed = new Set();
   const downloaded = new Set();
 
-  await save(address, dest, options);
-  // await save('Saving https://www.urbandictionary.com/author.php?author=Cat%20Pea', dest, options);
-  // await save(address, dest, options);
-  // await save(address, dest, options);
+  const startTime = performance.now()
+  await crawl({parent: address, address, destination});
+  const endTime = performance.now()
+  const crawlDuration = (endTime - startTime);
+  info(`Crawl took ${crawlDuration} milliseconds (${parseInt(crawlDuration/1000)} seconds), processed ${processed.size} urls, and downloaded ${downloaded.size}.`)
 
-  async function save(address, dest, options){
-    if(downloaded.has(address)) return;
-    downloaded.add(address);
+  async function crawl({parent, address, destination}){
 
-    if(url.parse(address).host != rootURL.host){
-      console.log(`Skipping ${address}...`);
-      return
-    }
+    if(alreadyProcessed(address)) return;
+    if(alienHost(address)) return;
 
-    //console.log(`Saving ${address}...`);
     if(url.parse(address).hash) return;
     if(url.parse(address).search) throw new Error(`Nope, query strings are not supported in this crawler, it requires a data saource meant for a static conversion: ${url.parse(address).search}`)
 
     const remoteUrl = url.parse(address).href;
-    const localFile = path.join(dest, url.parse(normalizeAddress(address)).pathname);
+    const localFile = path.join(destination, url.parse(normalizeAddress(address)).pathname);
+    const localDirectory = path.dirname(localFile);
 
-
-    await pause(500);
+    await mkdir(localDirectory, { recursive: true });
 
     let ext = path.extname(url.parse(normalizeAddress(address)).pathname);
     if(ext == '.htm') throw new Error('Noopers, no .htm extensions, you need a unifrom data source that uses standard extensions.')
 
-    if(ext == '.html'){
-      //console.log(`Downloading: ${remoteUrl} into ${localFile}`);
+    debug(`Downloading: ${remoteUrl} into ${localFile}`);
 
-      const response = await got(remoteUrl);
+    if(ext == '.html'){
+
+      let response = await download(address, parent);
 
       const contentType = response.headers['content-type'];
       if(mime.getExtension(contentType) !== 'html') throw new Error('Malformed content type for a .html url');
-      await mkdir(path.dirname(localFile), { recursive: true });
-      await writeFile(localFile, response.body);
+
+
       const $ = cheerio.load(response.body);
 
+      // Spidering
       const aList = $('a[href]').map((i, el) => $(el).attr('href') ).get()
       .map(link=>link.match(/^https*:\/\//)?(new url.URL(link)):(new url.URL(link, rootURL.origin)))
       .filter(urlObject=>urlObject.origin === rootURL.origin)
+      .map(urlObject=>{ urlObject.hash = ''; return urlObject;}) // not interested in hashes
 
       const scriptList = $('script[src]').map((i, el) => $(el).attr('src') ).get()
       .map(link=>link.match(/^https*:\/\//)?(new url.URL(link)):(new url.URL(link, rootURL.origin)))
       .filter(urlObject=>urlObject.origin === rootURL.origin)
+      .map(urlObject=>{ urlObject.search = ''; return urlObject;}) // used for cache magic, not interested
 
       const linkList = $('link[href]').map((i, el) => $(el).attr('href') ).get()
       .map(link=>link.match(/^https*:\/\//)?(new url.URL(link)):(new url.URL(link, rootURL.origin)))
       .filter(urlObject=>urlObject.origin === rootURL.origin)
+      .map(urlObject=>{ urlObject.search = ''; return urlObject;}) // used for cache magic, not interested
 
       const imgList = $('img[src]').map((i, el) => $(el).attr('src') ).get()
       .map(link=>link.match(/^https*:\/\//)?(new url.URL(link)):(new url.URL(link, rootURL.origin)))
       .filter(urlObject=>urlObject.origin === rootURL.origin)
+      .map(urlObject=>{ urlObject.search = ''; return urlObject;}) // used for cache magic, not interested
 
-      for(const urlObject of [ scriptList, linkList, imgList].flat()){
-        await save( urlObject.href, dest, options );
+      /* Rewriting...
+        This is only an issue if we rewrite /poem/99 to poem/99.html,
+        but sapper showed that it is OK to just make a 99 folder with index.html?
+        NOTE: use if rewriting is ever needed: await writeFile(localFile, $.html());
+      */
+      await writeFile(localFile, response.body);
+      downloaded.add({address, localFile});
+
+      for(const urlObject of [ aList, scriptList, linkList, imgList ].flat()){
+        await crawl({ parent: address, address:urlObject.href, destination });
       }
-       //console.log(linkObjects);
 
-      //
-      // $('a[href]').each(async function(i,el){
-      //   let link = $(el).attr('href');
-      //   let linkObject;
-      //
-      //   if(link.match(/^https*:\/\//)){
-      //     //console.log("OK", link);
-      //     linkObject = new url.URL(link);
-      //   }else{
-      //     //console.log(link, rootURL.origin);
-      //     linkObject = new url.URL(link, rootURL.origin);
-      //   }
-
-
-        //
-        // //const linkObject = new url.URL(link, );
-        // if(linkObject.origin === rootURL.origin){
-        //   //console.log(`Saving.... ${linkObject.href}`);
-        //     //await save( linkObject.href, dest, options );
-        // }else{
-        //   // console.log(`Skipping.... ${linkObject.href}`);
-        //
-        // }
-
-      //});
 
     }else if(ext == '.css'){
-      console.log('ADD CSS SCAN HERE!!!');
+
       const cssObject = new url.URL(remoteUrl);
-      const response = await got(remoteUrl);
+      let response = await download(address, parent);
+
       await writeFile(localFile, response.body);
+      downloaded.add({address, localFile});
+
       if(response.body){
         const regex = /url\("(?<resourceUrl>[^"]+)"\)/gm;
         const str = response.body;
@@ -143,93 +121,98 @@ async function mirror(address, dest, options){
         for(const urlObject of matches){
           urlObject.pathname = path.join(path.dirname(cssObject.pathname), urlObject.pathname);
           urlObject.search = ''; // used for cache magic
-          await save( urlObject.href, dest, options );
+          await crawl({ parent: address, address:urlObject.href, destination });
         }
       }
-      //url\("(?<resourceUrl>[^"]+)"\)
 
-      //bootstrap-icons.woff
+
     }else{
-      console.log(`Downloading: ${remoteUrl} into ${localFile}`);
-      await mkdir(path.dirname(localFile), { recursive: true });
-      await pipeline( got.stream(remoteUrl), fs.createWriteStream(localFile) );
+      try {
+        await pipeline( got.stream(remoteUrl), fs.createWriteStream(localFile) );
+        downloaded.add({address, localFile});
+      } catch (error) {
+        if (error?.response?.statusCode === 404) {
+          console.log(`${error.response.statusCode}: ${address} found on: ${parent}`)
+        }
+
+        console.log(error)
+        console.log(error.response)
+        console.log(error.response?.headers)
+        console.log(error.response?.body)
+
+        process.exit(1);
+      }
+
     }
 
-
+    //await pause(100);
   }
 
 
 
 
 
+  async function download(address, parent) {
+    let response
+    try {
+      response = await got(address)
+    } catch (error) {
+
+      if (error?.response?.statusCode === 404) {
+        console.log(`${error.response.statusCode}: ${address} found on: ${parent}`)
+      }
+
+      console.log(error)
+      console.log(error.response)
+      console.log(error.response?.headers)
+      console.log(error.response?.body)
+
+      process.exit(1);
+    }
+    return response;
+  }
+
+
+  function pause(ms){
+    return new Promise(function(resolve, reject){
+      setTimeout(function(){
+        resolve();
+      },ms);
+    });
+  }
+
+  function normalizeAddress(address){
+    const urlObject = new url.URL(address);
+    let cleanTarget = urlObject.href;
+    let ext = path.extname(urlObject.pathname);
+    if(!ext){
+      urlObject.pathname = path.join(urlObject.pathname, 'index.html');
+      cleanTarget = urlObject.href;
+    }
+    return cleanTarget;
+  }
+
+  function alreadyProcessed(address){
+    if(processed.has(address)){
+      // debug(`The address has already been processed ${address}`);
+      return true;
+    }else{
+      // debug(`Previously unseen address ${address}`);
+      processed.add(address);
+      return false;
+    }
+  }
+
+  function alienHost(address){
+    // debug(`Performing a host check`);
+    if(url.parse(address).host === rootURL.host){
+      // debug(`Friendly ${address}...`);
+      return false;
+    }else{
+      // debug(`Alien address, skipping ${address}...`);
+      return true;
+    }
+  }
 
 
 }
-
-
-
-
-
-
-
-// const extTransform = new Map()
-// extTransform.set('jpeg', 'jpg') ;
-// extTransform.set('mpga', 'mp3') ;
-//
-//
-// ////////////////////////////
-
-//
-// async function mirror(url, dest, options){
-//   const response = await save(url, dest, options);
-//
-// }
-//
-// async function save(address, dest, options){
-//
-//   if(address)
-//
-//   const requestUrl = url.parse(address);
-//   const response = await got(requestUrl.href);
-//   const safeName = [ getFileName(requestUrl), getExtName(requestUrl, response), ].join('.');
-//   console.log(dest);
-//   const destination = path.join(dest, getBaseName(requestUrl), safeName);
-//   console.log(destination);
-// }
-//
-//
-// function getExtName(address, response){
-//   const requestUrl = url.parse(address);
-//   let fileExt = path.extname(requestUrl.pathname);
-//   if(fileExt.startsWith('.')) fileExt = fileExt.substr(1)
-//   if(!fileExt){
-//     if(response){
-//       const contentType = response.headers['content-type'];
-//       fileExt = mime.getExtension(contentType);
-//       if(extTransform.has(fileExt)) fileExt = extTransform.get(fileExt);
-//     }else{
-//         throw new Error("Unable to calculate file extension")
-//     }
-//   }
-//   invariant(fileExt, 'Extension is required');
-//   return fileExt;
-// }
-//
-// function getFileName(address){
-//   const requestUrl = url.parse(address);
-//   let fileName = path.basename(requestUrl.pathname, path.extname(requestUrl.pathname));
-//   if(fileName == "") fileName = 'index';
-//   if(fileName == "/") fileName = 'index';
-//   return kebabCase(fileName);
-// }
-//
-// function getBaseName(address){
-//   const requestUrl = url.parse(address);
-//   getFileName(requestUrl);
-//
-//
-//   let baseName = path.basename(requestUrl.pathname);
-//   if(fileName == "") fileName = 'index';
-//   if(fileName == "/") fileName = 'index';
-//   return kebabCase(fileName);
-// }
