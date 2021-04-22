@@ -12,13 +12,12 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 # TODO
 
 ## v3 Architecture Upgrade
-- [ ] Setup a plugin-system, plugins should be listed in server object files.
 
 ## Primary
-- [x] During import remove the prefixes in content.html <img src="/image/md-poetry-0025-x.jpg" alt="X"> rename md-poetry-0025-x.jpg to poetry-0025-x.jpg
 - [ ] Images mentined in posts no longer get a sm-/xl- versions as that creates too many files, and creates ambiguity
 - [ ] Connect the build-in server with the crawler.
 - [ ] Make a stand-alone build of warrior using the catpea template, this will replace the existing site.
+- [ ] Introduce the software tutorial Book
 
 ## Potential
 - [ ] check for indexes that point to removed record-directories and remove them (put use the trash bin, not rimraf)
@@ -35,6 +34,8 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 - [ ] Setup With Amazon
 
 # Done
+- [x] During import remove the prefixes in content.html <img src="/image/md-poetry-0025-x.jpg" alt="X"> rename md-poetry-0025-x.jpg to poetry-0025-x.jpg
+- [x] Setup a plugin-system, plugins should be listed in server object files.
 - [x] Add print field
 - [x] Convert standard HTML to bootstrap formatting using cheerio. This needs cards, should this happen in the server?
 - [x] Copy audio extras, and dependencies... dependencies.json?
