@@ -18,7 +18,7 @@ the v2 decompiler is not needed not that the server is baked in...
 
 ## Primary
 - [ ] Connect the build-in server with the crawler.
-- [ ] Make a stand-alone build of warrior using the catpea template, this will replace the existing site.
+- [ ] Make a stand-alone build of WARRIOR using the catpea template, this will replace the existing site.
 - [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
 
 ## Potential
