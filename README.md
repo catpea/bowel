@@ -13,20 +13,19 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 
 ## v3 Architecture Upgrade
 
+note: the v1 decompiler is allowed to be hacky as v1 directory structures are still a little bit messy,
+the v2 decompiler is not needed not that the server is baked in...
+
 ## Primary
-- [ ] Images mentined in posts no longer get a sm-/xl- versions as that creates too many files, and creates ambiguity
 - [ ] Connect the build-in server with the crawler.
 - [ ] Make a stand-alone build of warrior using the catpea template, this will replace the existing site.
-- [ ] Introduce the software tutorial Book
+- [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
 
 ## Potential
+- [ ] Introduce the software tutorial Book
 - [ ] check for indexes that point to removed record-directories and remove them (put use the trash bin, not rimraf)
 - [ ] Add fallback image if record is missing an image (poetry-cover.jpg)
 - [ ] Should record injection (add new post) be internalized? .... YEAH, it is currently shelled out
-- [ ] More Exports
-  - [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
-- [ ] v2
-  - [ ] v2 decompiler (this is for later when this program is in use)
 
 # Audio Book
 - [ ] Add the Audiobook compiler, and remember that it just concatetantes files so it is very fast.
@@ -34,6 +33,8 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 - [ ] Setup With Amazon
 
 # Done
+- [x] Images mentioned in posts no longer get a sm-/xl- versions as that creates too many files, and creates ambiguity
+- [x] Do not create audio/images if not needed
 - [x] During import remove the prefixes in content.html <img src="/image/md-poetry-0025-x.jpg" alt="X"> rename md-poetry-0025-x.jpg to poetry-0025-x.jpg
 - [x] Setup a plugin-system, plugins should be listed in server object files.
 - [x] Add print field
