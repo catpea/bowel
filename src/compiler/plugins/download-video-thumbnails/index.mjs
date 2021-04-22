@@ -18,9 +18,9 @@ import fetch from 'node-fetch';
 
 const streamPipeline = promisify(pipeline);
 
-import { gatherImages } from "../../helpers.mjs";
+import { gatherImages } from "../../../helpers.mjs";
 
-import { shouldRecompile } from "../helpers.mjs";
+import { shouldRecompile } from "../../helpers.mjs";
 
 export {
   downloadVideoThumbnails,

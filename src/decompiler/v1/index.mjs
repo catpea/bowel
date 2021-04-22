@@ -1,3 +1,4 @@
+//import invariant from 'invariant';
 import debugContext from 'debug';
 const debug = debugContext('decompiler');
 
@@ -38,7 +39,7 @@ async function createData(so, yamlDb) {
   const baseDirectory = path.resolve(path.join(".", so.name));
 
   const fused = {}
-  if(so.yamlDatabase){
+  if(so.plugins?.yamlDatabase){
     debug(`Importing yaml database and creating a local abstraction...`);
     const index = yaml.load(await readFile(path.join(yamlDb,'index.yaml')));
     for(const item of index){
@@ -57,6 +58,8 @@ async function createData(so, yamlDb) {
   let progressCounter = 0;
 
   for (const item of so.data) {
+
+
     progressBar.update(progressCounter++);
     debug(`Processing ${item.id}, ${so.data.indexOf(item)+1}/${so.data.length}`);
 
@@ -68,7 +71,7 @@ async function createData(so, yamlDb) {
     await mkdir(filesDirectory, { recursive: true });
     await mkdir(cacheDirectory, { recursive: true });
 
-    if(so.yamlDatabase){
+    if(so.plugins?.yamlDatabase){
       debug(`Creating content.yaml for ${item.id}`);
       const id = item.id.split(so.name + '-').pop();
       const contentFile = path.join(dataDirectory, 'content.yaml');
@@ -76,7 +79,7 @@ async function createData(so, yamlDb) {
     }
 
     // content that cache is created from
-    if(!so.yamlDatabase){
+    if(!so.plugins?.yamlDatabase){
       debug(`This is not a yaml database, so dumping item.html as content.html`);
       await writeFile(path.join(dataDirectory, "content.html"), item.html);
     }
@@ -94,7 +97,11 @@ async function createData(so, yamlDb) {
     await writeFile( path.join(cacheDirectory, "configuration.json"), JSON.stringify(configuration, null, "  ") ); // cache of processed content and options
 
     debug(`Creating content related files and cache...`);
-    if(!so.yamlDatabase) await writeFile(path.join(cacheDirectory, "content.html"), item.html);
+
+    if(!so.plugins?.yamlDatabase){
+      item.html = item.html.replace(/<img src="\/image\/..-/g, '<img src="'); // During import remove the prefixes in content.html <img src="/image/md-poetry-0025-x.jpg" alt="X"> rename md-poetry-0025-x.jpg to poetry-0025-x.jpg
+      await writeFile(path.join(cacheDirectory, "content.html"), item.html);
+    }
     await writeFile( path.join(cacheDirectory, "links.json"), JSON.stringify(item.links, null, "  ") );
     await writeFile( path.join(cacheDirectory, "images.json"), JSON.stringify(item.images, null, "  ") );
     await writeFile(path.join(cacheDirectory, "content.txt"), item.text);
@@ -142,7 +149,7 @@ async function importFiles(so, rootDir, distDir, webDir, audioDir, imageDir) {
     await mkdir(filesDirectory, { recursive: true });
 
 
-    if(so.yamlDatabase){
+    if(so.plugins?.yamlDatabase){
 
       const contentFile = path.join(dataDirectory, 'content.yaml');
       const database = yaml.load((await readFile(contentFile)).toString())
@@ -198,7 +205,7 @@ async function importFiles(so, rootDir, distDir, webDir, audioDir, imageDir) {
         }
       }
 
-      if (so.coverImages) { // cover images only feature
+      if (so.plugins?.coverImages) { // cover images only feature
         if (item.image) {
           const variations = [ 'bl', 'ss', 'xs', 'sm', 'md', 'lg', 'xl' ];
           for (const variant of variations) {

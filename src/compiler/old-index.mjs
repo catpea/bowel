@@ -19,7 +19,7 @@ import {
   convertAudioToVideo,
   createMirror,
   createWebsite,
-} from "./plugins/index.mjs";
+} from "./plugins/create-website/index.mjs";
 
 import { coverImages, gatherImages, getFiles } from "../helpers.mjs";
 
@@ -35,78 +35,65 @@ async function indexParse(target) {
   return JSON.parse((await readFile(indexFile)).toString());
 }
 
-
-// plugins: {
-//   resizeCoverImage: {},
-//   convertAudioToVideo: {},
-//   createMirror: {},
-//   createWebsite: {},
-//   //createContactSheetImage: {},
-//   //downloadVideoThumbnails: {},
-// }
 async function createDistribution(ix) {
 
-  const baseDirectory = path.resolve(ix.name);
+  const baseDirectory = path.resolve(path.resolve(ix.name));
+
   const mergeDirectory = path.join(path.resolve("merge"), ix.name);
-  const projectDirectory = path.join(path.resolve("dist"), ix.name);
-
   await mkdir(mergeDirectory, { recursive: true });
+
+  const projectDirectory = path.join(path.resolve("dist"), ix.name);
   await mkdir(projectDirectory, { recursive: true });
+
+  const projectImageDirectory = path.join(projectDirectory, 'image');
+  await mkdir(projectImageDirectory, { recursive: true });
+
+  const projectAudioDirectory = path.join(projectDirectory, 'audio');
+  await mkdir(projectAudioDirectory, { recursive: true });
+
+  const projectWebsiteDirectory = path.join(projectDirectory, 'website');
+  await mkdir(projectWebsiteDirectory, { recursive: true });
+
   debug(`Created distribution directory: ${projectDirectory}`)
-
-  if(ix.plugins?.resizeCoverImage){
-    await mkdir(path.join(projectDirectory, 'image'), { recursive: true });
-  }
-
-  if(ix.plugins?.convertAudioToVideo){
-    await mkdir(path.join(projectDirectory, 'audio'), { recursive: true });
-  }
-
-  if(ix.plugins?.downloadVideoThumbnails){
-    await mkdir(path.join(projectDirectory, 'image'), { recursive: true });
-  }
-
-  if(ix.plugins?.createContactSheetImage){
-    await mkdir(path.join(projectDirectory, 'image'), { recursive: true });
-  }
 
 
   const data = [];
+
   const progressBar = new cliProgress.SingleBar({ format: 'Creating Object: |' + colors.yellow('{bar}') + '| {percentage}% || {value}/{total} Entries', barCompleteChar: '\u2588', barIncompleteChar: '\u2591', hideCursor: true }, cliProgress.Presets.shades_classic);
   if (!process.env.DEBUG) progressBar.start(ix.data.length-1, 0); debug('create directories progress bar has been disabled for DEBUG mode');
   let progressCounter = 0;
+
   for (const entry of ix.data) {
+
     progressBar.update(progressCounter++);
     debug(`Processing ${entry}, ${ix.data.indexOf(entry)+1}/${ix.data.length}`);
+
     debug('Building the record...')
     const directory = path.join(baseDirectory, entry);
     const record = await buildRecord(ix, directory); // NOTE: data becomes available here, previously it was just an array of indexes.
     data.push(record);
 
-    if(ix.plugins?.resizeCoverImage){
-      await resizeCoverImage(directory, record);
-      await copyCoverImages(directory, projectDirectory, record);
-    }
+    debug('Generating media...')
+    // Create Into Cache based on stuff in files
 
-    if(ix.plugins?.convertAudioToVideo){
-      await convertAudioToVideo(directory, record);
-      await copyAudio(directory, projectDirectory, record);
-    }
+    if (ix.contactSheet) await downloadVideoThumbnails(directory, record);
+    if (ix.contactSheet) await createContactSheetImage(directory, record);
 
-    if(ix.plugins?.downloadVideoThumbnails){
-      await downloadVideoThumbnails(directory, record);
-      await copyVideoThumbnails(directory, projectDirectory, record);
-    }
+    if (ix.audioVersion) await convertAudioToVideo(directory, record);
 
-    if(ix.plugins?.createContactSheetImage){
-      await createContactSheetImage(directory, record);
-      await resizeCoverImage(directory, record);
-      await copyCoverImages(directory, projectDirectory, record);
-    }
+    if (ix.coverImages) await resizeCoverImage(directory, record);
+    if (ix.contactSheet) await resizeCoverImage(directory, record);
 
-    if (ix.plugins?.localAssets){
-      await copyLocalAssets(directory, projectDirectory, record);
-    }
+    debug('Copying files into the distribution directory...')
+    // Copy To Dist from Cache
+    if (ix.audioVersion) await copyAudio(directory, projectDirectory, record);
+    if (ix.localAssets) await copyLocalAssets(directory, projectDirectory, record);
+
+    if (ix.coverImages) await copyCoverImages(directory, projectDirectory, record);
+    if (ix.contactSheet) await copyCoverImages(directory, projectDirectory, record);
+
+    if (ix.contactSheet) await copyVideoThumbnails(directory, projectDirectory, record);
+
 
   }
 
@@ -116,26 +103,19 @@ async function createDistribution(ix) {
   debug('Creating the new server object file...')
   const recompiled = Object.assign({}, ix, { data });
   recompiled.format = 'v2';
-
-  if(ix.plugins?.createMirror){
-    debug('Creating a mirror...')
-    await createMirror(projectDirectory, recompiled);
-  }
-
-  if(ix.plugins?.createWebsite){
-    debug('Creating website...')
-    const projectWebsiteDirectory = path.join(projectDirectory, 'website');
-    await mkdir(projectWebsiteDirectory, { recursive: true });
-    await createWebsite(projectWebsiteDirectory, recompiled);
-  }
-
   const outputFile = path.join(projectDirectory, ix.name + ".json");
   await writeFile(outputFile, JSON.stringify(recompiled, null, "  "));
+
+  debug('Creating website...')
+  await createWebsite(projectWebsiteDirectory, recompiled);
+
+  debug('Creating a mirror...')
+  await createMirror(projectDirectory, recompiled);
+
   progressBar.stop();
   debug(`Created: ${outputFile}`);
 
 }
-
 
 async function mergeDependencies(mergeDirectory, projectDirectory) {
   for await (const sourceFile of getFiles(mergeDirectory)) {

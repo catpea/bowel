@@ -8,8 +8,8 @@ import util from 'util';
 import child_process from 'child_process';
 const execFile = util.promisify(child_process.execFile);
 
-import { shouldRecompile } from "../helpers.mjs";
-import { coverImages } from "../../helpers.mjs";
+import { shouldRecompile } from "../../helpers.mjs";
+import { coverImages } from "../../../helpers.mjs";
 
 export {
   resizeCoverImage,

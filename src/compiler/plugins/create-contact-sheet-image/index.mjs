@@ -11,8 +11,8 @@ import util from 'util';
 import child_process from 'child_process';
 const execFile = util.promisify(child_process.execFile);
 
-import { gatherImages } from "../../helpers.mjs";
-import { shouldRecompile } from "../helpers.mjs";
+import { gatherImages } from "../../../helpers.mjs";
+import { shouldRecompile } from "../../helpers.mjs";
 
 export {
   createContactSheetImage
