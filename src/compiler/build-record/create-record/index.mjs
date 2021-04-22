@@ -97,6 +97,9 @@ function printVersion(html, entry) {
   const $ = cheerio.load(html);
   const links = [];
 
+  $("img").each(function (i, elem) {
+    $(this).css({ "width": "50%" });
+  });
   $("div.section").each(function (i, elem) {
     $(this).addClass("avoid-break-inside");
     $(this).css({ "padding-bottom": "2rem" });

@@ -131,15 +131,12 @@ async function mirror({address, destination}){
         await pipeline( got.stream(remoteUrl), fs.createWriteStream(localFile) );
         downloaded.add({address, localFile});
       } catch (error) {
+
         if (error?.response?.statusCode === 404) {
           console.log(`${error.response.statusCode}: ${address} found on: ${parent}`)
-        }
-
+        } else {
         console.log(error)
-        console.log(error.response)
-        console.log(error.response?.headers)
-        console.log(error.response?.body)
-
+        }
         process.exit(1);
       }
 
@@ -160,13 +157,9 @@ async function mirror({address, destination}){
 
       if (error?.response?.statusCode === 404) {
         console.log(`${error.response.statusCode}: ${address} found on: ${parent}`)
-      }
-
+      } else {
       console.log(error)
-      console.log(error.response)
-      console.log(error.response?.headers)
-      console.log(error.response?.body)
-
+      }
       process.exit(1);
     }
     return response;

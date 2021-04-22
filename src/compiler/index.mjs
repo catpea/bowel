@@ -109,6 +109,7 @@ async function createDistribution(ix) {
     }
 
   }
+  progressBar.stop();
 
   debug(`Merging dependencies`)
   await mergeDependencies(mergeDirectory, projectDirectory);
@@ -116,6 +117,10 @@ async function createDistribution(ix) {
   debug('Creating the new server object file...')
   const recompiled = Object.assign({}, ix, { data });
   recompiled.format = 'v2';
+
+  const outputFile = path.join(projectDirectory, ix.name + ".json");
+  await writeFile(outputFile, JSON.stringify(recompiled, null, "  "));
+  debug(`Created: ${outputFile}`);
 
   if(ix.plugins?.createMirror){
     debug('Creating a mirror...')
@@ -129,10 +134,6 @@ async function createDistribution(ix) {
     await createWebsite(projectWebsiteDirectory, recompiled);
   }
 
-  const outputFile = path.join(projectDirectory, ix.name + ".json");
-  await writeFile(outputFile, JSON.stringify(recompiled, null, "  "));
-  progressBar.stop();
-  debug(`Created: ${outputFile}`);
 
 }
 

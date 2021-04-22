@@ -13,13 +13,15 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 
 ## v3 Architecture Upgrade
 
-note: the v1 decompiler is allowed to be hacky as v1 directory structures are still a little bit messy,
-the v2 decompiler is not needed not that the server is baked in...
+## NOGO/SHOWSTOPPER CLASS ITEMS
 
 ## Primary
-- [ ] Connect the build-in server with the crawler.
 - [ ] Make a stand-alone build of WARRIOR using the catpea template, this will replace the existing site.
 - [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
+- move website configuration out of /home/meow/Universe/Development/bowel/src/compiler/plugins/create-website/index.mjs
+- changing description: 'Home of Furkies Purrkies and Westland Warrior', in /home/meow/Universe/Development/bowel/src/compiler/plugins/create-website/index.mjs
+
+note: the v1 decompiler is allowed to be hacky as v1 directory structures are still a little bit messy, the v2 decompiler is not needed not that the server is baked in...
 
 ## Potential
 - [ ] Introduce the software tutorial Book
@@ -33,6 +35,9 @@ the v2 decompiler is not needed not that the server is baked in...
 - [ ] Setup With Amazon
 
 # Done
+- [x] Connect the build-in server with the crawler.
+- [x] Add printable version generator
+- [x] BUG http://black:7468/read/furkies-purrkies/25 Has no card interface
 - [x] Images mentioned in posts no longer get a sm-/xl- versions as that creates too many files, and creates ambiguity
 - [x] Do not create audio/images if not needed
 - [x] During import remove the prefixes in content.html <img src="/image/md-poetry-0025-x.jpg" alt="X"> rename md-poetry-0025-x.jpg to poetry-0025-x.jpg
@@ -88,7 +93,8 @@ if you never touch(1) the content.html, then it will never be re-compiled.
 bowel decompile ../warrior/dist/server-object/westland-warrior.json --root-dir ../warrior --dist-dir ../warrior/dist/ --web-dir ../warrior/docs/ --yaml-db ../warrior/db/
 
 
-bowel decompile ~/Universe/Development/poetry/dist/server-object/furkies-purrkies.json --root-dir ../poetry --image-dir ~/Universe/Development/poetry/src/image/ --audio-dir ~/Universe/Development/poetry/src/audio/ --web-dir ~/Universe/Development/poetry/docs/ --release-dir ~/Universe/Development/poetry/dist/
+clear; bowel decompile ~/Universe/Development/poetry/dist/server-object/furkies-purrkies.json --root-dir ../poetry --image-dir ~/Universe/Development/poetry/src/image/ --audio-dir ~/Universe/Development/poetry/src/audio/ --web-dir ~/Universe/Development/poetry/docs/ --dist-dir ~/Universe/Development/poetry/dist/
+
 
 # Adding New Records
 

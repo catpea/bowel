@@ -81,6 +81,10 @@ async function createData(so, yamlDb) {
     // content that cache is created from
     if(!so.plugins?.yamlDatabase){
       debug(`This is not a yaml database, so dumping item.html as content.html`);
+
+      // QUICKFIX: no md- prefic for inner linked images whatever the user links is that image.
+      item.html = item.html.replace(/<img src="\/image\/..-/g, '<img src="/image/'); // During import remove the prefixes in content.html <img src="/image/md-poetry-0025-x.jpg" alt="X"> rename md-poetry-0025-x.jpg to poetry-0025-x.jpg
+
       await writeFile(path.join(dataDirectory, "content.html"), item.html);
     }
 
@@ -99,7 +103,6 @@ async function createData(so, yamlDb) {
     debug(`Creating content related files and cache...`);
 
     if(!so.plugins?.yamlDatabase){
-      item.html = item.html.replace(/<img src="\/image\/..-/g, '<img src="'); // During import remove the prefixes in content.html <img src="/image/md-poetry-0025-x.jpg" alt="X"> rename md-poetry-0025-x.jpg to poetry-0025-x.jpg
       await writeFile(path.join(cacheDirectory, "content.html"), item.html);
     }
     await writeFile( path.join(cacheDirectory, "links.json"), JSON.stringify(item.links, null, "  ") );
