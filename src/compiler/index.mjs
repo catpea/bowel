@@ -44,7 +44,7 @@ async function indexParse(target) {
 //   //createContactSheetImage: {},
 //   //downloadVideoThumbnails: {},
 // }
-async function createDistribution(ix) {
+async function createDistribution(configuration, ix) {
 
   const baseDirectory = path.resolve(ix.name);
   const mergeDirectory = path.join(path.resolve("merge"), ix.name);
@@ -129,9 +129,9 @@ async function createDistribution(ix) {
 
   if(ix.plugins?.createWebsite){
     debug('Creating website...')
-    const projectWebsiteDirectory = path.join(projectDirectory, 'website');
-    await mkdir(projectWebsiteDirectory, { recursive: true });
-    await createWebsite(projectWebsiteDirectory, recompiled);
+    console.log(projectDirectory, configuration.destination);
+    const destination = path.resolve(projectDirectory, configuration.destination);
+    await createWebsite(configuration, destination);
   }
 
 
@@ -217,8 +217,12 @@ async function copyLocalAssets(dataDirectory, distDirectory, entry) {
       const sourceFile = path.join(filesDirectory, path.basename(link.url));
       const destinationDirectory = path.join( distDirectory, path.dirname(link.url) );
       const destinationFile = path.join( destinationDirectory, path.basename(link.url) );
-      if(await shouldCopyFile(sourceFile, destinationFile)) await copyFile(sourceFile, destinationFile);
+      if(await shouldCopyFile(sourceFile, destinationFile)){
+        await mkdir(path.dirname(destinationFile), { recursive: true });
+        await copyFile(sourceFile, destinationFile);
+      }
     }
   }
+
   return true;
 }

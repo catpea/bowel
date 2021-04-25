@@ -38,24 +38,36 @@ async function createRecord(ix, recordFile, directory) {
   const item = {};
   Object.assign( item, JSON.parse( (await readFile(path.join(directory, "configuration.json"))).toString() ) );
 
-  // find html
-  let html = "";
+
   const contentFilename = await contentFile(directory);
   debug(`Content filename for ${item.id} is: ${contentFilename}`);
   const content = ( await readFile(path.join(directory, contentFilename)) ).toString();
+
+  // find html
+  let html = "";
+  let bootstrap = "";
+
   if (path.extname(contentFilename) == ".html") {
     html = content;
+    bootstrap = bootstrapVersion(html, item);
+
   } else if (path.extname(contentFilename) == ".md") {
     html = markedCustom(content);
+    bootstrap = bootstrapVersion(html, item);
+
   } else if (path.extname(contentFilename) == ".yaml") {
     html = yamlDatabaseToHtml(yaml.load(content));
+    bootstrap = yamlDatabaseToBootstrap(yaml.load(content));
   }
 
-  // fill in the object
   item.html = html;
+  item.bootstrap = bootstrap;
+
+  // fill in the object
   item.text = textVersion(item.html, item);
-  item.bootstrap = bootstrapVersion(item.html, item);
   item.print = printVersion(item.html, item);
+
+
 
   if(ix.contactSheet){
     item.images = []; // these are video thumbnails so keep it empty;
@@ -139,6 +151,7 @@ function printVersion(html, entry) {
   return updated;
 }
 
+
 function bootstrapVersion(html) {
   const $ = cheerio.load(html);
 
@@ -168,7 +181,7 @@ function bootstrapVersion(html) {
   });
 
   /// FIX
-  $("div.section > img").each(function (i, elem) {
+  $("div.section img").each(function (i, elem) {
     $(this).addClass("w-100");
   });
 
@@ -219,7 +232,9 @@ function listImages(html) {
         title: $(this).attr("title") || $(this).attr("alt"),
         url: $(this)
           .attr("src")
-          .replace(/^\/image\/[a-z]{2}-/, ""),
+          .replace(/^\/image\//, "")
+          .replace(/^(bl|ss|xs|sm|md|lg|xl)-/, "")
+
       };
     })
     .get();
@@ -228,24 +243,49 @@ function listImages(html) {
 
 function listLinks(html) {
   const $ = cheerio.load(html);
+  let unique = new Set();
+
   const list = $("a")
     .map(function (i, el) {
-      //console.log($(el).html());
-      return {
-        title: $(this).attr("title") || $(this).text(),
-        url: $(this).attr("href"),
-      };
+
+      const title = ($(this).attr("title") || $(this).text() || '').trim().replace(/\s+/g, ' ');
+      const url = ($(this).attr("href") || '').trim();
+
+
+
+      const id = title + url;
+
+      if(title && url){
+        if(unique.has(id)){
+          //console.log(id);
+          // already tracking
+        }else{
+          unique.add(id);
+          return { title, url };
+        }
+      }
+
     })
     .get()
+    .filter(i=>i)
+
     .map((i) => {
       i.hostname = "local";
       try {
-        i.hostname = new URL(i.url).hostname;
+        let hostname = new URL(i.url).hostname;
+        i.hostname = hostname;
+        //console.log(hostname);
       } catch (e) {
         // borked.
       }
       return i;
-    });
+    })
+    //.filter(i=>!i.hostname.includes('youtube'))
+    .filter(i=>i);
+
+
+
+
   return list;
 }
 
@@ -277,7 +317,7 @@ function yamlDatabaseToHtml(content) {
       </header>
       <figure>
         <a href="https://www.youtube.com/watch?v={{id}}" class="no-tufte-underline" title="{{title}}">
-          <img src="image/yid-{{id}}.jpg" alt="{{title}}">
+          <img src="/image/yid-{{id}}.jpg" alt="{{title}}">
         </a>
         <figcaption>{{title}}</figcaption>
       </figure>
@@ -311,7 +351,7 @@ function yamlDatabaseToHtml(content) {
       <h2>{{title}}</h2>
     </header>
       <figure>
-        <img src="image/{{url}}" alt="{{title}}">
+        <img src="/image/{{url}}" alt="{{title}}">
       </figure>
       {{{text}}}
   </div>
@@ -342,11 +382,112 @@ function yamlDatabaseToHtml(content) {
         <h2>Business Practice: {{title}}</h2>
       </header>
       <figure>
-        <img src="image/{{url}}" alt="{{title}}">
+        <img src="/image/{{url}}" alt="{{title}}">
       </figure>
       {{{text}}}
     </div>
   {{/is}}
+  `;
+  let html = "";
+  const template = handlebars.compile(htmlTemplate);
+
+  for (let element of content) {
+    if (element.text) element.text = marked(element.text);
+    html += template(element);
+  }
+
+  html = pretty(html, { ocd: true });
+  return html;
+}
+
+function yamlDatabaseToBootstrap(content) {
+  const htmlTemplate = `
+  {{#is this.type 'quote'}}
+    <div class="card card-section bg-dark text-warning shadow">
+      <div class="card-header">
+        Quote {{#if author}}by {{author}}{{/if}}
+      </div>
+      <div class="card-body">
+        <div class="card-text">{{{text}}}</div>
+        {{#if url}}
+          <cite title="{{author}}"><a href="{{url}}" class="card-link text-reset">{{author}}</a></cite>
+        {{/if}}
+        {{#unless url}}
+          <cite title="{{author}}">{{author}}</cite>
+        {{/unless}}
+      </div>
+    </div>
+  {{/is}}
+
+  {{#is this.type 'youtube'}}
+    <div class="card card-section bg-dark text-warning shadow">
+
+      <div class="card-header">{{title}}</div>
+      <a href="https://www.youtube.com/watch?v={{id}}" title="{{title}}" alt="{{title}}"><img src="/image/yid-{{id}}.jpg" alt="{{title}}" class="card-img"></a>
+      <div class="card-body">
+        <h5 class="card-title">{{title}}</h5>
+        <a href="https://www.youtube.com/watch?v={{id}}" title="{{title}}" class="btn btn-warning">Play Video</a>
+      </div>
+    </div>
+  {{/is}}
+
+  {{#is this.type 'text'}}
+    <div class="card card-section bg-dark text-warning shadow">
+      <div class="card-body">
+        <h5 class="card-title">{{title}}</h5>
+        <div class="card-text">{{{text}}}</div>
+      </div>
+    </div>
+  {{/is}}
+
+  {{#is this.type 'poem'}}
+    <div class="card card-section bg-dark text-warning shadow">
+      <div class="card-body">
+        <h5 class="card-title">{{title}}</h5>
+        <h6 class="card-subtitle mb-5 text-muted">{{author}}</h6>
+        <div class="card-text">{{{text}}}</div>
+      </div>
+    </div>
+  {{/is}}
+
+
+  {{#is this.type 'image'}}
+    <div class="card card-section bg-dark text-warning shadow">
+      <img src="/image/{{url}}" alt="{{title}}" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">{{title}}</h5>
+        <div class="card-text">{{{text}}}</div>
+      </div>
+    </div>
+  {{/is}}
+
+  {{#is this.type 'subtitle'}}
+    <div class="card card-section bg-dark text-warning text-center shadow">
+      <div class="card-body">
+        <h5 class="card-title display-3">{{title}}</h5>
+      </div>
+    </div>
+  {{/is}}
+
+  {{#is this.type 'link'}}
+    <div class="card card-section bg-dark text-warning shadow">
+      <div class="card-body">
+        <h5 class="card-title">{{title}}</h5>
+        <a href="{{url}}" class="card-link">{{title}}</a>
+      </div>
+    </div>
+  {{/is}}
+
+  {{#is this.type 'business'}}
+    <div class="card card-section bg-dark text-warning border-warning shadow">
+      <img src="/image/{{url}}" alt="{{title}}" class="card-img-top">
+      <div class="card-body">
+        <h5 class="card-title">Business Practice: {{title}}</h5>
+        <div class="card-text">{{{text}}}</div>
+      </div>
+    </div>
+  {{/is}}
+
   `;
   let html = "";
   const template = handlebars.compile(htmlTemplate);

@@ -29,6 +29,8 @@ async function mirror({address, destination}){
   const processed = new Set();
   const downloaded = new Set();
 
+  await mkdir(destination, { recursive: true });
+
   const startTime = performance.now()
   await crawl({parent: address, address, destination});
   const endTime = performance.now()

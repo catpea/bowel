@@ -18,32 +18,25 @@
        <% }) %>
      </div>
 
-
-
      <div class="col-12 col-md-12 col-lg-5 pt-3">
-       <h5 class="text-warning mb-0"><%= title %> &middot; <a href="https://catpea.com" class="text-decoration-none text-reset">catpea.com</a></h5>
+       <h5 class="text-warning mb-0"><%= title %></h5>
        <small class="d-block text-muted mb-2"><%= description %></small>
 
        <ul class="list-unstyled text-small mb-3 ">
-         <li><a class="fw-light text-light text-decoration-none" href="/"><i class="bi bi-house-door text-warning align-text-bottom"></i> Cat Pea Home Page</a></li>
-         <li><a class="fw-light text-light text-decoration-none" href="/sitemap"><i class="bi bi-globe text-warning align-text-bottom"></i> Cat Pea Map</a></li>
+         <li><a class="fw-light text-light text-decoration-none" href="/"><i class="bi bi-house-door text-warning align-text-bottom"></i> Home Page</a></li>
+         <li><a class="fw-light text-light text-decoration-none" href="/sitemap"><i class="bi bi-globe text-warning align-text-bottom"></i> Map</a></li>
        </ul>
 
-       <h5 class="text-warning">Cat Pea Social</h5>
+       <h5 class="text-warning">Network</h5>
        <ul class="list-unstyled text-small">
-         <li><a class="fw-light text-light text-decoration-none" href="https://www.urbandictionary.com/author.php?author=Cat%20Pea">Urban Dictionary <i class="bi bi-link-45deg text-warning align-text-bottom"></i></a></li>
-         <li><a class="fw-light text-light text-decoration-none" href="https://web.archive.org/web/*/catpea.com">Wayback Machine <i class="bi bi-link-45deg text-warning align-text-bottom"></i></a></li>
-         <li><a class="fw-light text-light text-decoration-none" href="https://dribbble.com/catpea">Dribbble <i class="bi bi-link-45deg text-warning align-text-bottom"></i></a></li>
-         <li><a class="fw-light text-light text-decoration-none" href="https://gitlab.com/catpea">GitLab <i class="bi bi-link-45deg text-warning align-text-bottom"></i></a></li>
-         <li><a class="fw-light text-light text-decoration-none" href="https://github.com/catpea">GitHub <i class="bi bi-link-45deg text-warning align-text-bottom"></i></a></li>
+         <% network.forEach(function(entry){ %>
+           <li><a class="fw-light text-light text-decoration-none" href="<%= entry.href %>"><i class="bi bi-<%= entry.icon %> align-text-bottom text-warning"></i> <%= entry.name %></a></li>
+         <% }) %>
        </ul>
 
        <a href="#top" class="my-2 d-block text-warning"><i class="bi bi-arrow-90deg-up"></i> <span class="">Top</span></a>
 
-
      </div>
    </div>
-
-
 
  </footer>

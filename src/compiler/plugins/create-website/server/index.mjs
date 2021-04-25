@@ -36,8 +36,9 @@ async function boot({port, configuration}) {
   const app = new Koa()
 
   app.use(async (ctx, next) => {
-    ctx.state.title = 'Cat Pea University'
-    ctx.state.description = 'Home of Furkies Purrkies and Westland Warrior'
+    ctx.state.title = configuration.title;
+    ctx.state.description = configuration.description;
+    ctx.state.network = configuration.network;
     await next()
   })
 

@@ -16,10 +16,14 @@ If a $50 computer can do the job, you write faster software to eliminate the cod
 ## NOGO/SHOWSTOPPER CLASS ITEMS
 
 ## Primary
+- [ ] resolve dependencies (from configuration file ex catpea has both warrior and poetry) prior to compilation
+- [ ] use https://www.npmjs.com/package/rc for configuration
+- [ ] move website configuration out of /home/meow/Universe/Development/bowel/src/compiler/plugins/create-website/index.mjs
+- [ ] changing description: 'Home of Furkies Purrkies and Westland Warrior', in /home/meow/Universe/Development/bowel/src/compiler/plugins/create-website/index.mjs
 - [ ] Make a stand-alone build of WARRIOR using the catpea template, this will replace the existing site.
 - [ ] compiler/convert-audio-to-video is just touching files, it is not creating the videos, fix it when this program goes live
-- move website configuration out of /home/meow/Universe/Development/bowel/src/compiler/plugins/create-website/index.mjs
-- changing description: 'Home of Furkies Purrkies and Westland Warrior', in /home/meow/Universe/Development/bowel/src/compiler/plugins/create-website/index.mjs
+- [ ] For now both configuration and server-objects contaion links to social network titles and subtitles this needs to be fixed.
+- [ ] List transformation architecture with middleware support (v3)
 
 note: the v1 decompiler is allowed to be hacky as v1 directory structures are still a little bit messy, the v2 decompiler is not needed not that the server is baked in...
 

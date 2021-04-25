@@ -91,8 +91,10 @@ async function decompile({target, rootDir, distDir, webDir, audioDir, imageDir, 
 }
 
 async function compile({target}){
+  const configuration = (await import(`${process.cwd()}/configuration.mjs`)).default;
+  const targetConfiguration = Object.assign({}, configuration.common, configuration.project.filter(i=>i.name == target)[0]);
   const ix = await compiler.indexParse(target);
-  await compiler.createDistribution(ix);
+  await compiler.createDistribution(targetConfiguration, ix);
 }
 
 async function create({name, template, destination}){
