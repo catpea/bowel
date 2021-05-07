@@ -12,7 +12,7 @@ export {
   createMirror,
 };
 
-async function createMirror(baseDirectory, so) {
+async function createMirror({so, dist, home}) {
   debug(`Creating LTS mirror...`)
   const htmlTemplate = `
   <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
@@ -90,7 +90,8 @@ async function createMirror(baseDirectory, so) {
   `.trim();
   const template = handlebars.compile(htmlTemplate);
   const html = pretty(template(so), {ocd: true});
-  const mirrorLocation = path.join(baseDirectory, "index.html");
+  mkdir(home);
+  const mirrorLocation = path.join(home, "index.html");
   await writeFile(mirrorLocation, html);
   debug(`Mirror created at: ${mirrorLocation}`)
 }
