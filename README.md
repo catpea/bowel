@@ -11,3 +11,8 @@ bowel decompile ../warrior/dist/server-object/westland-warrior.json --root-dir .
 clear; bowel decompile ~/Universe/Development/poetry/dist/server-object/furkies-purrkies.json --root-dir ../poetry --image-dir ~/Universe/Development/poetry/src/image/ --audio-dir ~/Universe/Development/poetry/src/audio/ --web-dir ~/Universe/Development/poetry/docs/ --dist-dir ~/Universe/Development/poetry/dist/
 
 ```
+
+
+# TODO
+
+- [ ] Put In Compiler Mode
