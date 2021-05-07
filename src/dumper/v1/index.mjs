@@ -21,7 +21,7 @@ export default {
 
 
 
-async function createIndex(so) {
+async function createIndex({so}) {
   const baseDirectory = path.resolve(path.join(".", so.name));
   await mkdir(baseDirectory, { recursive: true });
   const head = Object.keys(so)
@@ -35,7 +35,33 @@ async function createIndex(so) {
   debug(`created index: ${indexFileLocation}`);
 }
 
-async function createData(so, yamlDb) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function createData({so, yamlDb}) {
   const baseDirectory = path.resolve(path.join(".", so.name));
 
   const fused = {}
@@ -118,7 +144,24 @@ async function createData(so, yamlDb) {
   progressBar.stop();
 }
 
-async function importFiles(so, rootDir, distDir, webDir, audioDir, imageDir) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function importFiles({so, rootDir, distDir, webDir, audioDir, imageDir}) {
   const baseDirectory = path.resolve(path.join(".", so.name));
 
   const progressBar = new cliProgress.SingleBar({ format: 'Importing Files: |' + colors.yellow('{bar}') + '| {percentage}% || {value}/{total} Entries', barCompleteChar: '\u2588', barIncompleteChar: '\u2591', hideCursor: true }, cliProgress.Presets.shades_classic);
