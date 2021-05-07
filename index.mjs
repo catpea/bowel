@@ -30,15 +30,16 @@ program.command('dump <file>')
   .option('--web-dir <dir>', 'Root of local things linked in html (web root).')
   .option('--audio-dir <dir>', 'Path to audio files.')
   .option('--image-dir <dir>', 'Path to images.')
+  .option('--cover-images <dir>', 'Path to cover images.')
   .option('--yaml-db <dir>', 'Path to YAML database directory.')
   .action(async (file, options) => {
-    const {rootDir, distDir, webDir, audioDir, imageDir, yamlDb } = options;
-    await dump({target:file, rootDir, distDir, webDir, audioDir, imageDir, yamlDb});
+    const {rootDir, distDir, webDir, audioDir, imageDir, yamlDb, coverImages } = options;
+    await dump({target:file, rootDir, distDir, webDir, audioDir, imageDir, yamlDb, coverImages});
   });
 
 program.parse(process.argv);
 
-async function dump({target, rootDir, distDir, webDir, audioDir, imageDir, yamlDb}){
+async function dump({target, rootDir, distDir, webDir, audioDir, imageDir, yamlDb, coverImages}){
   const so = await dumper.readServerObject(target);
   try{
     if( !rootDir ) {throw new Error('ERROR: --root-dir is unspecified: please specify the root directory so that general dependencies can be copied.');}
@@ -47,6 +48,7 @@ async function dump({target, rootDir, distDir, webDir, audioDir, imageDir, yamlD
     if( so.contactSheet && (!webDir) ) { throw new Error('ERROR: --web-dir is unspecified, it is required for copying image files related to contact sheet (page image).');}
     if( so.audioVersion && (!audioDir) ) { throw new Error('ERROR: --audio-dir is unspecified, it is required to import audio files that go along with the data.');}
     if( so.coverImages && (!imageDir) ) { throw new Error('ERROR: --image-dir is unspecified, it is required to copy main images');}
+    if( so.coverImages && (!coverImages) ) { throw new Error('ERROR: --image-dir is unspecified, it is required to copy main images');}
     if( so.yamlDatabase && (!yamlDb) ) { throw new Error('ERROR: --yaml-db is unspecified, it is required to copy yaml formatted data that is then converted to cache/content.html');}
   }catch(e){
     console.log(e.message);
@@ -54,5 +56,5 @@ async function dump({target, rootDir, distDir, webDir, audioDir, imageDir, yamlD
   }
   await dumper[so.format||'v1'].createIndex({ so }); // now we know order, and book metadata
   await dumper[so.format||'v1'].createData({ so, yamlDb }); // now poems and their configuration has been stored
-  await dumper[so.format||'v1'].importFiles({ so, rootDir, distDir, webDir, audioDir, imageDir }); // now assets have been imported.
+  await dumper[so.format||'v1'].importFiles({ so, rootDir, distDir, webDir, audioDir, imageDir, yamlDb, coverImages }); // now assets have been imported.
 }

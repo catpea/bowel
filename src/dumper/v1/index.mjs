@@ -1,4 +1,3 @@
-//import invariant from 'invariant';
 import debugContext from 'debug';
 const debug = debugContext('decompiler');
 
@@ -6,6 +5,7 @@ import path from "path";
 import { existsSync } from "fs";
 import { mkdir, writeFile, readFile, copyFile } from "fs/promises";
 
+import invariant from 'invariant';
 import cliProgress from 'cli-progress';
 import colors from 'colors';
 import yaml from 'js-yaml';
@@ -24,16 +24,25 @@ export default {
 async function createIndex({so}) {
   const baseDirectory = path.resolve(path.join(".", so.name));
   await mkdir(baseDirectory, { recursive: true });
-  const head = Object.keys(so)
-    .filter((i) => i !== "data")
-    .map((i) => [i, so[i]]);
   const data = so.data.map((i) => i.id);
-  head.push(["data", data]);
-  const index = Object.fromEntries(head);
+  const index = {data};
   const indexFileLocation = path.join(baseDirectory, "index.json");
   await writeFile(indexFileLocation, JSON.stringify(index, null, "  "));
   debug(`created index: ${indexFileLocation}`);
 }
+// async function createIndex({so}) {
+//   const baseDirectory = path.resolve(path.join(".", so.name));
+//   await mkdir(baseDirectory, { recursive: true });
+//   const head = Object.keys(so)
+//     .filter((i) => i !== "data")
+//     .map((i) => [i, so[i]]);
+//   const data = so.data.map((i) => i.id);
+//   head.push(["data", data]);
+//   const index = Object.fromEntries(head);
+//   const indexFileLocation = path.join(baseDirectory, "index.json");
+//   await writeFile(indexFileLocation, JSON.stringify(index, null, "  "));
+//   debug(`created index: ${indexFileLocation}`);
+// }
 
 
 
@@ -65,7 +74,8 @@ async function createData({so, yamlDb}) {
   const baseDirectory = path.resolve(path.join(".", so.name));
 
   const fused = {}
-  if(so.plugins?.yamlDatabase){
+
+  if(yamlDb){
     debug(`Importing yaml database and creating a local abstraction...`);
     const index = yaml.load(await readFile(path.join(yamlDb,'index.yaml')));
     for(const item of index){
@@ -83,8 +93,8 @@ async function createData({so, yamlDb}) {
   if (!process.env.DEBUG) progressBar.start(so.data.length-1, 0); debug('create directories progress bar has been disabled for DEBUG mode');
   let progressCounter = 0;
 
+  let itemIndex = 0;
   for (const item of so.data) {
-
 
     progressBar.update(progressCounter++);
     debug(`Processing ${item.id}, ${so.data.indexOf(item)+1}/${so.data.length}`);
@@ -97,7 +107,7 @@ async function createData({so, yamlDb}) {
     await mkdir(filesDirectory, { recursive: true });
     await mkdir(cacheDirectory, { recursive: true });
 
-    if(so.plugins?.yamlDatabase){
+    if(yamlDb){
       debug(`Creating content.yaml for ${item.id}`);
       const id = item.id.split(so.name + '-').pop();
       const contentFile = path.join(dataDirectory, 'content.yaml');
@@ -105,7 +115,7 @@ async function createData({so, yamlDb}) {
     }
 
     // content that cache is created from
-    if(!so.plugins?.yamlDatabase){
+    if(!yamlDb){
       debug(`This is not a yaml database, so dumping item.html as content.html`);
 
       // QUICKFIX: no md- prefic for inner linked images whatever the user links is that image.
@@ -123,22 +133,29 @@ async function createData({so, yamlDb}) {
         .filter((i) => requiredFields.includes(i))
         .map((i) => [i, item[i]])
     );
+
+    if(itemIndex === 0 && so.dependencies){
+
+      configuration.attachments = Object.fromEntries(Object.entries(so.dependencies).map(([name, value])=>[path.basename(name), value]));
+    }
+
     await writeFile( path.join(dataDirectory, "configuration.json"), JSON.stringify(configuration, null, "  ") );
-    await writeFile( path.join(cacheDirectory, "configuration.json"), JSON.stringify(configuration, null, "  ") ); // cache of processed content and options
+    //await writeFile( path.join(cacheDirectory, "configuration.json"), JSON.stringify(configuration, null, "  ") ); // cache of processed content and options
 
     debug(`Creating content related files and cache...`);
 
-    if(!so.plugins?.yamlDatabase){
-      await writeFile(path.join(cacheDirectory, "content.html"), item.html);
+    if(!yamlDb){
+      ///       await writeFile(path.join(cacheDirectory, "html.html"), item.html);
     }
-    await writeFile( path.join(cacheDirectory, "links.json"), JSON.stringify(item.links, null, "  ") );
-    await writeFile( path.join(cacheDirectory, "images.json"), JSON.stringify(item.images, null, "  ") );
-    await writeFile(path.join(cacheDirectory, "content.txt"), item.text);
+    /// await writeFile( path.join(cacheDirectory, "links.json"), JSON.stringify(item.links, null, "  ") );
+    /// await writeFile( path.join(cacheDirectory, "images.json"), JSON.stringify(item.images, null, "  ") );
+    /// await writeFile(path.join(cacheDirectory, "content.txt"), item.text);
 
     // DO NOT create record.json, too much changes between releases, it needs to be re-created
     // debug(`Creating record.json in cache directory...`)
     // await writeFile( path.join(cacheDirectory, "record.json"), JSON.stringify(item, null, "  ") );
 
+    itemIndex++;
   }
   debug(`Finished creating data, cache and records.`)
   progressBar.stop();
@@ -161,7 +178,7 @@ async function createData({so, yamlDb}) {
 
 
 
-async function importFiles({so, rootDir, distDir, webDir, audioDir, imageDir}) {
+async function importFiles({so, rootDir, distDir, webDir, audioDir, imageDir, yamlDb, coverImages}) {
   const baseDirectory = path.resolve(path.join(".", so.name));
 
   const progressBar = new cliProgress.SingleBar({ format: 'Importing Files: |' + colors.yellow('{bar}') + '| {percentage}% || {value}/{total} Entries', barCompleteChar: '\u2588', barIncompleteChar: '\u2591', hideCursor: true }, cliProgress.Presets.shades_classic);
@@ -195,7 +212,7 @@ async function importFiles({so, rootDir, distDir, webDir, audioDir, imageDir}) {
     await mkdir(filesDirectory, { recursive: true });
 
 
-    if(so.plugins?.yamlDatabase){
+    if(yamlDb){
 
       const contentFile = path.join(dataDirectory, 'content.yaml');
       const database = yaml.load((await readFile(contentFile)).toString())
@@ -236,7 +253,7 @@ async function importFiles({so, rootDir, distDir, webDir, audioDir, imageDir}) {
         const destinationFile = path.join(cacheDirectory, fileName);
         if (!existsSync(destinationFile)) {
           debug(`Importing video version of audio: ${fileName}`);
-          await copyFile(sourceFile, destinationFile);
+          // NOTE: THIS IS 30 GB TTO MUCH DATA FOR GITHUB... await copyFile(sourceFile, destinationFile);
         }
       }
     } // if audio
@@ -251,7 +268,7 @@ async function importFiles({so, rootDir, distDir, webDir, audioDir, imageDir}) {
         }
       }
 
-      if (so.plugins?.coverImages) { // cover images only feature
+      if (coverImages) { // cover images only feature
         if (item.image) {
           const variations = [ 'bl', 'ss', 'xs', 'sm', 'md', 'lg', 'xl' ];
           for (const variant of variations) {
