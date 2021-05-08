@@ -139,6 +139,10 @@ async function createData({so, yamlDb}) {
       configuration.attachments = Object.fromEntries(Object.entries(so.dependencies).map(([name, value])=>[path.basename(name), value]));
     }
 
+    if(!configuration.attachments){
+      configuration.attachments = {};
+    }
+
     await writeFile( path.join(dataDirectory, "configuration.json"), JSON.stringify(configuration, null, "  ") );
     //await writeFile( path.join(cacheDirectory, "configuration.json"), JSON.stringify(configuration, null, "  ") ); // cache of processed content and options
 
@@ -186,12 +190,10 @@ async function importFiles({so, rootDir, distDir, webDir, audioDir, imageDir, ya
   let progressCounter = 0;
 
 
-  const mergeDirectory = path.join(path.resolve('merge'), so.name);
   if (so.dependencies) {
     for(const [src, dest] of Object.entries(so.dependencies)){
-      const destinationDir = path.join(mergeDirectory, dest);
-      await mkdir(destinationDir, { recursive: true });
-        const sourceFile = path.join(rootDir, src);
+      const destinationDir = path.join(baseDirectory, so.data[0].id, 'files');
+      const sourceFile = path.join(rootDir, src);
         const destinationFile = path.join(destinationDir, path.basename(src));
         if (!existsSync(destinationFile)) {
           debug(`Importing dependency: ${src} into ${dest}`);
@@ -199,6 +201,20 @@ async function importFiles({so, rootDir, distDir, webDir, audioDir, imageDir, ya
         }
     }
   }
+
+  // const mergeDirectory = path.join(path.resolve('merge'), so.name);
+  // if (so.dependencies) {
+  //   for(const [src, dest] of Object.entries(so.dependencies)){
+  //     const destinationDir = path.join(mergeDirectory, dest);
+  //     await mkdir(destinationDir, { recursive: true });
+  //       const sourceFile = path.join(rootDir, src);
+  //       const destinationFile = path.join(destinationDir, path.basename(src));
+  //       if (!existsSync(destinationFile)) {
+  //         debug(`Importing dependency: ${src} into ${dest}`);
+  //         await copyFile(sourceFile, destinationFile);
+  //       }
+  //   }
+  // }
 
   for (const item of so.data) {
     progressBar.update(progressCounter++);
