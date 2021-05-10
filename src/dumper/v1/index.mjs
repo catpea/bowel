@@ -111,7 +111,16 @@ async function createData({so, yamlDb}) {
       debug(`Creating content.yaml for ${item.id}`);
       const id = item.id.split(so.name + '-').pop();
       const contentFile = path.join(dataDirectory, 'content.yaml');
-      await writeFile(contentFile, yaml.dump(fused[id], {lineWidth: 32_000}))
+      const yamlData = yaml.dump(fused[id], {lineWidth: 32_000});
+      const existingData = (await readFile(contentFile)).toString();
+
+      if(yamlData === existingData){
+        debug(`Skipped writing to ${item.id}/content.yaml becasue data is the same.`);
+      }else{
+        debug(`Writing to ${item.id}/content.yaml becasue data differs ${yamlData.length} vs ${existingData.length} bytes`);
+        await writeFile(contentFile, yamlData)
+      }
+
     }
 
     // content that cache is created from
@@ -233,6 +242,7 @@ async function importFiles({so, rootDir, distDir, webDir, audioDir, imageDir, ya
       const contentFile = path.join(dataDirectory, 'content.yaml');
       const database = yaml.load((await readFile(contentFile)).toString())
       const imageDependencies = (await gatherImages(database));
+
       for(const image of imageDependencies){
         const sourceFile = path.join(webDir, 'images', image);
         const destinationFile = path.join(filesDirectory, image);
@@ -240,7 +250,7 @@ async function importFiles({so, rootDir, distDir, webDir, audioDir, imageDir, ya
           debug(`Importing content.yaml image: ${image}`);
           await copyFile(sourceFile, destinationFile);
         }
-      }
+      } // for
 
       if (item.image) {
         const sourceFile = path.join(webDir, 'images', item.image);
@@ -268,7 +278,7 @@ async function importFiles({so, rootDir, distDir, webDir, audioDir, imageDir, ya
         const sourceFile = path.join(distDir, 'video', fileName);
         const destinationFile = path.join(cacheDirectory, fileName);
         if (!existsSync(destinationFile)) {
-          debug(`Importing video version of audio: ${fileName}`);
+          debug(`Not importing video version of audio: ${fileName}`);
           // NOTE: THIS IS 30 GB TTO MUCH DATA FOR GITHUB... await copyFile(sourceFile, destinationFile);
         }
       }
