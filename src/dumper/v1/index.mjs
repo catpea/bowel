@@ -112,7 +112,15 @@ async function createData({so, yamlDb}) {
       const id = item.id.split(so.name + '-').pop();
       const contentFile = path.join(dataDirectory, 'content.yaml');
       const yamlData = yaml.dump(fused[id], {lineWidth: 32_000});
-      const existingData = (await readFile(contentFile)).toString();
+
+
+      let existingData = "";
+      if (existsSync(contentFile)) {
+        existingData = (await readFile(contentFile)).toString();
+      }
+
+
+
 
       if(yamlData === existingData){
         debug(`Skipped writing to ${item.id}/content.yaml becasue data is the same.`);
